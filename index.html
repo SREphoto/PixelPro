@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge — Game Asset Studio</title>
+<style>
+:root{--bg:#0b1020;--panel:#131a30;--panel2:#1a2340;--border:#2a3560;--txt:#e6ebff;--muted:#8b96b8;--accent:#7c5cff;--accent2:#22d3ee;--good:#22c55e;--warn:#f59e0b;--danger:#ef4444}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:linear-gradient(90deg,#151b36,#10142a);border-bottom:1px solid var(--border)}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:20px;font-weight:900;color:#fff}
+header h1{font-size:18px;margin:0;letter-spacing:.3px}header h1 span{color:var(--accent2)}
+header small{color:var(--muted)}
+.proj{display:flex;gap:8px;margin-left:auto;align-items:center}
+input[type=text],select{background:#0e1430;border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px}
+button{background:#212c55;border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--accent);transform:translateY(-1px)}button.primary{background:linear-gradient(135deg,var(--accent),#4f46e5);border:none;font-weight:700}button.ghost{background:transparent}button.small{padding:4px 8px;font-size:12px}
+.layout{flex:1;display:flex;min-height:0}
+nav{width:210px;background:var(--panel);border-right:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:8px}
+nav button.tab{text-align:left;padding:11px 12px;border-radius:10px;background:transparent;border:1px solid transparent;font-size:14px}
+nav button.tab.active{background:var(--panel2);border-color:var(--border)}nav button.tab.active b{color:var(--accent2)}
+nav .hint{margin-top:auto;font-size:12px;color:var(--muted);line-height:1.5;background:#0e1430;border:1px solid var(--border);border-radius:10px;padding:10px}
+main{flex:1;overflow:auto;padding:16px;min-width:0}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px}
+.grid2{display:grid;grid-template-columns:300px 1fr 280px;gap:14px}.grid2b{display:grid;grid-template-columns:340px 1fr;gap:14px}
+h2{margin:0 0 4px;font-size:16px}h3{margin:12px 0 8px;font-size:13px;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px}
+p.muted{color:var(--muted);font-size:13px;margin:4px 0 12px}
+.tools{display:flex;flex-wrap:wrap;gap:6px}.tools button.active{outline:2px solid var(--accent2);background:#243062}
+.swatches{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:8px 0}.sw{height:26px;border-radius:6px;border:2px solid rgba(255,255,255,.15);cursor:pointer}.sw.active{border-color:#fff;transform:scale(1.08)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+canvas.pixel{image-rendering:pixelated;border-radius:10px;background:#0a0f24;background-image:linear-gradient(45deg,#141b3a 25%,transparent 25%),linear-gradient(-45deg,#141b3a 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#141b3a 75%),linear-gradient(-45deg,transparent 75%,#141b3a 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;border:1px solid var(--border);cursor:crosshair;max-width:100%}
+.frames{display:flex;gap:8px;overflow:auto;padding:8px;background:#0e1430;border:1px solid var(--border);border-radius:10px;margin-top:10px}
+.frame{min-width:72px;text-align:center;border:2px solid var(--border);border-radius:10px;padding:6px;background:#141b3a;cursor:pointer}.frame.active{border-color:var(--accent2)}.frame img{width:56px;height:56px;image-rendering:pixelated;background:#0a0f24;border-radius:6px}.frame div{font-size:11px;color:var(--muted);margin-top:4px}
+label{font-size:12px;color:var(--muted)}input[type=range]{width:100%}input[type=color]{width:44px;height:32px;border:none;border-radius:8px;background:none;padding:0}
+.paletteTiles{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:220px;overflow:auto;background:#0e1430;padding:8px;border-radius:10px;border:1px solid var(--border)}.paletteTiles img{width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:4px;border:2px solid transparent;cursor:pointer;background:#0a0f24}.paletteTiles img.sel{border-color:var(--accent2)}
+.entityBtns{display:flex;gap:6px;flex-wrap:wrap}
+.kbd{font-size:11px;background:#0e1430;border:1px solid var(--border);border-radius:6px;padding:2px 6px;color:var(--muted)}
+footer{padding:6px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;gap:12px;background:#0e1430}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2340;border:1px solid var(--accent2);padding:10px 16px;border-radius:10px;display:none}
+@media(max-width:1100px){.grid2{grid-template-columns:1fr}nav{width:170px}}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">◈</div>
+<h1>PixelForge <span>Studio</span></h1><small>v0.1 prototype • all-in-one game assets</small>
+<div class="proj">
+<input type="text" id="projName" value="My Awesome Game" style="width:170px">
+<button class="small" onclick="saveProject(true)">💾 Save</button>
+<button class="small" onclick="exportProjectJSON()">⤓ Project</button>
+<button class="small" onclick="document.getElementById('importFile').click()">⤒ Import</button>
+<input type="file" id="importFile" accept=".json" style="display:none">
+<button class="primary small" onclick="exportAll()">Export Game Pack</button>
+<a href="village-quest.html" target="_blank" style="text-decoration:none"><button class="small">▶ Village Quest</button></a>
+</div>
+</header>
+<div class="layout">
+<nav>
+<button class="tab active" data-tab="sprites">🎨 <b>Sprites</b><br><small style="color:var(--muted)">characters & sheets</small></button>
+<button class="tab" data-tab="tiles">🧱 <b>Tileset</b><br><small style="color:var(--muted)">terrain & props</small></button>
+<button class="tab" data-tab="levels">🗺️ <b>Levels</b><br><small style="color:var(--muted)">maps & collisions</small></button>
+<button class="tab" data-tab="lab">✨ <b>Graphics Lab</b><br><small style="color:var(--muted)">HD art & filters</small></button>
+<button class="tab" data-tab="library">📚 <b>Library</b><br><small style="color:var(--muted)">slicer • anims • itch.io</small></button>
+<div class="hint">💡 Solo-dev flow:<br>1. Draw sprites<br>2. Build tileset<br>3. Paint level<br>4. Polish in Lab<br>5. Export pack<br><br>Autosaves to browser.</div>
+</nav>
+<main>
+<!-- SPRITES -->
+<section id="tab-sprites" class="panel active">
+<div class="grid2">
+<div class="card">
+<h2>Sprite Editor</h2><p class="muted">Pixel art with animation frames. Draw, animate, export sheet.</p>
+<h3>Tools</h3>
+<div class="tools" id="spriteTools">
+<button data-t="pencil" class="active">✏️ Pencil</button><button data-t="eraser">🧽 Erase</button><button data-t="fill">🪣 Fill</button><button data-t="line">📏 Line</button><button data-t="rect">▭ Rect</button><button data-t="circle">⭕ Circle</button><button data-t="picker">💉 Picker</button>
+</div>
+<h3>Color</h3>
+<div class="row"><input type="color" id="sprColor" value="#7c5cff"><input type="text" id="sprHex" value="#7c5cff" style="width:80px"><button class="small" onclick="addSwatch()">+ Save</button></div>
+<div class="swatches" id="swatches"></div>
+<div class="row"><label>Canvas</label><select id="sprSize"><option>16</option><option selected>32</option><option>48</option><option>64</option></select>
+<label><input type="checkbox" id="onion" checked> Onion skin</label>
+<label><input type="checkbox" id="showGrid" checked> Grid</label></div>
+<div class="row"><button class="small" onclick="sprUndo()">↩ Undo</button><button class="small" onclick="sprRedo()">↪ Redo</button><button class="small" onclick="clearFrame()">Clear</button><button class="small" onclick="mirrorFrame()">⇋ Mirror</button><button class="small" onclick="flipV()">⇅ Flip</button><button class="small" onclick="rotateFrame()">⟳ Rotate</button><button class="small" onclick="shiftFrame(1,0)">→</button><button class="small" onclick="shiftFrame(-1,0)">←</button><button class="small" onclick="shiftFrame(0,1)">↓</button><button class="small" onclick="shiftFrame(0,-1)">↑</button></div>
+<h3>Pixel FX</h3>
+<div class="row"><button class="small" onclick="fxOutline()">✏️ Outline</button><button class="small" onclick="fxDither()">▦ Dither</button><button class="small" onclick="fxInvert()">◐ Invert</button><button class="small" onclick="fxBlackToAlpha()">⬛→◻ Black→Alpha</button></div>
+<div class="row"><button class="small" onclick="fxAdjust(15)">☀️ +Light</button><button class="small" onclick="fxAdjust(-15)">🌙 -Dark</button><button class="small" onclick="fxRetro16()">🎮 Retro-16</button><button class="small" onclick="fxSmooth()">💧 AA-Smooth</button></div>
+<div class="row"><label><input type="checkbox" id="mirrorMode"> 🪞 Mirror-draw mode</label></div>
+</div>
+<div class="card">
+<h2 id="frameLabel">Frame 1</h2>
+<div style="display:flex;gap:14px;flex-wrap:wrap">
+<canvas id="sprCanvas" class="pixel" width="512" height="512" style="width:min(512px,100%)"></canvas>
+<div style="min-width:180px;flex:1">
+<h3>Animation</h3>
+<canvas id="animCanvas" class="pixel" width="128" height="128" style="width:128px;height:128px"></canvas>
+<div class="row"><label>FPS</label><input type="range" id="fps" min="1" max="24" value="6" style="width:100px"><span id="fpsV">6</span><button class="small" id="playBtn" onclick="togglePlay()">▶ Play</button></div>
+<div class="row"><button class="small" onclick="addFrame()">+ Add</button><button class="small" onclick="dupFrame()">⧉ Duplicate</button><button class="small" onclick="delFrame()">🗑 Delete</button></div>
+<h3>Export sprite</h3>
+<div class="row"><button class="small primary" onclick="downloadSpriteSheet()">PNG Sheet</button><button class="small" onclick="downloadFrame()">PNG Frame</button><button class="small" onclick="copySpriteJSON()">Copy JSON</button></div>
+<p class="muted">Sheet = horizontal strip. JSON works with Phaser / Godot / Unity.</p>
+</div>
+</div>
+<div class="frames" id="filmstrip"></div>
+</div>
+<div class="card">
+<h2>Character Quick-Start</h2><p class="muted">One click starter bases for solo devs.</p>
+<div class="row"><button class="small" onclick="presetSlime()">🟢 Slime</button><button class="small" onclick="presetHero()">🦸 Hero</button><button class="small" onclick="presetCoin()">🪙 Coin</button><button class="small" onclick="presetTree()">🌳 Tree</button></div>
+<h3>Shading helper</h3><div class="row"><button class="small" onclick="autoShade()">Auto-shade current frame</button></div>
+<p class="muted">Auto-shade darkens bottom-right edges for instant depth.</p>
+<h3>Session</h3><p class="muted" id="saveStatus">● autosaved</p>
+<h3>💾 Sprite Stash</h3><p class="muted">Saved sprites live in the app — reload them, download them, or stamp frame 1 into a tile.</p>
+<div class="row"><input type="text" id="stashName" placeholder="e.g. Knight Run" style="width:120px"><button class="small primary" onclick="saveStash()">+ Stash current</button></div>
+<div class="row"><button class="small" onclick="exportStash()">⤓ Export stash</button><button class="small" onclick="document.getElementById('stashUp').click()">⤒ Import</button><input type="file" id="stashUp" accept=".json" style="display:none"></div>
+<div id="stashList" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto"></div>
+</div>
+</div>
+</section>
+<!-- TILES -->
+<section id="tab-tiles" class="panel">
+<div class="grid2b">
+<div class="card">
+<h2>Tileset — 8×8 @16px</h2><p class="muted">Click a tile, then paint it on the right. Used by Level editor.</p>
+<canvas id="tilesetCanvas" class="pixel" width="512" height="512" style="width:100%"></canvas>
+<div class="row"><button class="small primary" onclick="genFantasyTiles()">🌿 Generate fantasy set</button><button class="small" onclick="genDungeonTiles()">🕳️ Dungeon</button><button class="small" onclick="clearTiles()">Clear</button></div>
+</div>
+<div class="card">
+<h2>Tile Painter — tile <span id="tileId">0</span></h2>
+<canvas id="tileCanvas" class="pixel" width="320" height="320" style="width:min(320px,100%)"></canvas>
+<div class="tools" id="tileTools" style="margin-top:8px"><button data-t="pencil" class="active">✏️</button><button data-t="eraser">🧽</button><button data-t="fill">🪣</button><button data-t="picker">💉</button></div>
+<div class="row"><input type="color" id="tileColor" value="#22c55e"><button class="small" onclick="fillTile()">Fill</button><button class="small" onclick="noiseTile()">Noise</button><button class="small" onclick="copyTileToAll()">Copy → all empty</button></div>
+<p class="muted">Tip: generate a base set, then hand-tweak key tiles (grass, water edges).</p>
+</div>
+</div>
+</section>
+<!-- LEVELS -->
+<section id="tab-levels" class="panel">
+<div class="grid2b">
+<div class="card">
+<h2>Brushes</h2>
+<div class="row"><label>Layer</label><select id="layerSel"><option value="ground">Ground</option><option value="deco">Deco</option><option value="collision">Collision</option><option value="entity">Entities</option></select></div>
+<h3>Tiles</h3><div class="paletteTiles" id="levelPalette"></div>
+<h3>Entities</h3><div class="entityBtns">
+<button class="small" data-ent="spawn">🧍 Spawn</button><button class="small" data-ent="enemy">👾 Enemy</button><button class="small" data-ent="coin">🪙 Coin</button><button class="small" data-ent="exit">🚪 Exit</button><button class="small" data-ent="erase">🧽 Erase</button>
+</div>
+<h3>Map</h3>
+<div class="row"><label>W</label><select id="mapW"><option>16</option><option selected>24</option><option>32</option></select><label>H</label><select id="mapH"><option>12</option><option selected>16</option><option>24</option></select><button class="small" onclick="resizeMap()">Resize</button></div>
+<div class="row"><label><input type="checkbox" id="showColl" checked> Show collision</label><label><input type="checkbox" id="showGridL" checked> Grid</label></div>
+<div class="row"><button class="small" onclick="fillMapGround()">Fill grass</button><button class="small" onclick="clearMap()">Clear</button><button class="small" onclick="demoMap()">✨ Demo level</button></div>
+<div class="row"><button class="small primary" onclick="downloadMapPNG()">PNG Map</button><button class="small" onclick="copyMapJSON()">Copy JSON</button></div>
+</div>
+<div class="card">
+<h2>Level Canvas — <span id="mapInfo"></span></h2>
+<canvas id="mapCanvas" class="pixel" style="width:100%"></canvas>
+<p class="muted">Paint with mouse / touch. <span class="kbd">G</span> ground <span class="kbd">D</span> deco <span class="kbd">C</span> collision <span class="kbd">E</span> entities</p>
+</div>
+</div>
+</section>
+<!-- LAB -->
+<section id="tab-lab" class="panel">
+<div class="grid2b">
+<div class="card">
+<h2>Graphics Lab — “real graphics”</h2><p class="muted">Import HD art / photos, stylize them to match your pixel game, then send back to sprites.</p>
+<div class="row"><button class="small primary" onclick="document.getElementById('imgUp').click()">⤒ Upload image</button><input type="file" id="imgUp" accept="image/*" style="display:none"><button class="small" onclick="labSample()">Use sample art</button></div>
+<h3>Style</h3>
+<label>Pixelate <span id="pxV">6</span></label><input type="range" id="labPx" min="1" max="24" value="6">
+<label>Saturation <span id="satV">120%</span></label><input type="range" id="labSat" min="0" max="250" value="120">
+<label>Contrast <span id="conV">110%</span></label><input type="range" id="labCon" min="50" max="200" value="110">
+<label>Warmth / Hue <span id="hueV">0°</span></label><input type="range" id="labHue" min="-90" max="90" value="0">
+<div class="row"><label><input type="checkbox" id="labScan"> Scanlines</label><label><input type="checkbox" id="labVig" checked> Vignette</label><label><input type="checkbox" id="labOutline"> Dark outline</label></div>
+<div class="row"><button class="small" onclick="applyLab(true)">Apply style</button><button class="small" onclick="sendLabToSprite()">→ Send to Sprite</button><button class="small" onclick="downloadLab()">⤓ Download</button></div>
+</div>
+<div class="card">
+<h2>Preview</h2>
+<canvas id="labCanvas" class="pixel" width="640" height="400" style="width:100%"></canvas>
+<p class="muted">Best practice: pixelate 4–8 + boost saturation for cohesive “real-but-retro” look.</p>
+</div>
+</div>
+</section>
+<!-- LIBRARY -->
+<section id="tab-library" class="panel">
+<div class="grid2b">
+<div class="card">
+<h2>✂️ Sprite-Sheet Slicer</h2><p class="muted">Drop in any sheet (like your Dark Knight PNG) → slice to frames. Works with black/magenta backgrounds.</p>
+<div class="row"><button class="small primary" onclick="document.getElementById('sheetUp').click()">⤒ Upload sheet</button><input type="file" id="sheetUp" accept="image/*" style="display:none"><button class="small" onclick="loadDarkKnight()">🗡️ Load Dark Knight sheet</button></div>
+<div class="row"><label>Cols</label><input type="text" id="sliceCols" value="6" style="width:50px"><label>Rows</label><input type="text" id="sliceRows" value="3" style="width:50px"><label>Frame px</label><select id="sliceSize"><option>16</option><option>24</option><option selected>32</option><option>48</option><option>64</option></select></div>
+<div class="row"><label><input type="checkbox" id="sliceKey" checked> Remove black bg</label><label><input type="checkbox" id="sliceTrim"> Trim empty</label><button class="small primary" onclick="sliceSheet()">✂️ Slice → Frames</button></div>
+<canvas id="sheetPreview" class="pixel" width="433" height="160" style="width:100%"></canvas>
+<p class="muted" id="sheetInfo">No sheet loaded. Tip: your dark-knight.png is bundled — click Load.</p>
+<h3>Premade animation vault</h3>
+<p class="muted">One click → replaces frames with a ready loop. Then edit freely.</p>
+<div class="row">
+<button class="small" onclick="animWalk()">🚶 Hero walk (4f)</button><button class="small" onclick="animSlimeHop()">🟢 Slime hop (3f)</button><button class="small" onclick="animBat()">🦇 Bat flap (2f)</button><button class="small" onclick="animCoinSpin()">🪙 Coin spin (4f)</button>
+</div><div class="row">
+<button class="small" onclick="animExplosion()">💥 Explosion (5f)</button><button class="small" onclick="animSlash()">⚔️ Slash (3f)</button><button class="small" onclick="animTorch()">🔥 Torch (4f)</button><button class="small" onclick="animGhost()">👻 Ghost float (2f)</button>
+</div><div class="row">
+<button class="small" onclick="animKnightIdle()">🛡️ Knight idle (2f)</button><button class="small" onclick="animWater()">🌊 Water (3f)</button>
+</div>
+</div>
+<div class="card">
+<h2>🗡️ Your Dark Knight sheet</h2>
+<img src="dark-knight.png" style="width:100%;image-rendering:pixelated;background:#000;border-radius:10px;border:1px solid var(--border)">
+<p class="muted">Shining in the Darkness–style boss. Original is © Sega — great as a <b>reference / placeholder</b>. Don't ship it commercially. Use the slicer above (try 6 cols × 3 rows, remove-black ON) to pull poses into frames, or hit:</p>
+<div class="row"><button class="small primary" onclick="loadDarkKnight()">Load into slicer</button><button class="small" onclick="darkKnightToSprite()">Use top-row as frames</button></div>
+<h3>⭐ Best free packs on itch.io (from my scout)</h3>
+<div style="font-size:13px;line-height:1.9">
+<b>Start here (CC0, commercial-safe):</b><br>
+• <a href="https://pixelfrog-assets.itch.io" target="_blank" style="color:var(--accent2)">Pixel Frog — Pixel Adventure / Kings & Pigs</a> — full platformer kit, animated player+enemies+traps<br>
+• <a href="https://ansimuz.itch.io" target="_blank" style="color:var(--accent2)">Ansimuz — SunnyLand + Warped series</a> — CC0 platformer/metroidvania, Godot+Phaser projects included<br>
+• <a href="https://0x72.itch.io/dungeontileset-ii" target="_blank" style="color:var(--accent2)">0x72 — DungeonTileset II</a> — the dungeon-crawler standard, animated torches & dozens of heroes<br>
+• <a href="https://cainos.itch.io/cainos-pixel-art-top-down-basic" target="_blank" style="color:var(--accent2)">Cainos — Top-Down Basic</a> — 32×32 tiles, 48 props, Unity controller<br>
+• <a href="https://kenney.nl/assets" target="_blank" style="color:var(--accent2)">Kenney.nl</a> — 40,000+ CC0 assets outside itch, consistent style<br>
+<b>Bosses & RPG enemies like your Dark Knight:</b><br>
+• <a href="https://itch.io/game-assets/free/tag-boss-battle/tag-pixel-art" target="_blank" style="color:var(--accent2)">Free Boss-Battle pixel art (73 packs)</a> — Demon Slime (12 anims), Frost Guardian, Mecha Golem, King Slime<br>
+• <a href="https://itch.io/game-assets/free/tag-monsters/tag-sprites" target="_blank" style="color:var(--accent2)">Free Monsters+Sprites (415 packs)</a> — Enemy Galore I (12 enemies/475 frames), FREE Golem, Undead pack<br>
+• <a href="https://itch.io/game-assets/tag-animation/tag-spritesheet" target="_blank" style="color:var(--accent2)">Animation + Spritesheet tag</a> — mage, porcupine (4-dir), bird CC0, traps (30 animated)<br>
+• <a href="https://lucky-cassette.itch.io" target="_blank" style="color:var(--accent2)">Lucky Bestiary — 100 Retro JRPG Enemies</a> — closest modern match to Shining-style front-view battlers<br>
+</div>
+<p class="muted">Workflow: download PNG sheets from itch → Upload in slicer → Slice → Paint levels → Export pack. Check each page's license (CC0 = do anything).</p>
+</div>
+</div>
+<div class="card" style="margin-top:14px">
+<h2>🛡️⚔️ Your Knight Pack — 11 strips, ready to load</h2>
+<p class="muted">Uploaded just now: chibi Warrior (guard / idle / run / 2× attack) + Pawn idles with axe, hammer, pickaxe, knife, gold, meat. All 192px frames on black — one click slices them into editable frames @64px. Tip: uncheck "Remove black bg" if thin dark outlines get eaten; use FX → Black→Alpha instead.</p>
+<div class="row" style="align-items:stretch">
+<div style="flex:1;min-width:220px;background:#0e1430;border:1px solid var(--border);border-radius:10px;padding:8px"><b style="font-size:13px">Warrior_Guard — 6f</b><br><img src="assets/Warrior_Guard.png" style="width:100%;image-rendering:pixelated;background:#000;border-radius:6px"><br><button class="small primary" onclick="loadStrip('assets/Warrior_Guard.png',6,'Warrior Guard')">▶ Load 6 frames</button></div>
+<div style="flex:1;min-width:220px;background:#0e1430;border:1px solid var(--border);border-radius:10px;padding:8px"><b style="font-size:13px">Warrior_Idle — 8f</b><br><img src="assets/Warrior_Idle.png" style="width:100%;image-rendering:pixelated;background:#000;border-radius:6px"><br><button class="small primary" onclick="loadStrip('assets/Warrior_Idle.png',8,'Warrior Idle')">▶ Load 8 frames</button></div>
+<div style="flex:1;min-width:220px;background:#0e1430;border:1px solid var(--border);border-radius:10px;padding:8px"><b style="font-size:13px">Warrior_Run — 6f</b><br><img src="assets/Warrior_Run.png" style="width:100%;image-rendering:pixelated;background:#000;border-radius:6px"><br><button class="small primary" onclick="loadStrip('assets/Warrior_Run.png',6,'Warrior Run')">▶ Load 6 frames</button></div>
+</div>
+<div class="row" style="align-items:stretch">
+<div style="flex:1;min-width:220px;background:#0e1430;border:1px solid var(--border);border-radius:10px;padding:8px"><b style="font-size:13px">Warrior_Attack1 — 4f spin</b><br><img src="assets/Warrior_Attack1.png" style="width:100%;image-rendering:pixelated;background:#000;border-radius:6px"><br><button class="small primary" onclick="loadStrip('assets/Warrior_Attack1.png',4,'Warrior Attack 1')">▶ Load 4 frames</button></div>
+<div style="flex:1;min-width:220px;background:#0e1430;border:1px solid var(--border);border-radius:10px;padding:8px"><b style="font-size:13px">Warrior_Attack2 — 4f slash</b><br><img src="assets/Warrior_Attack2.png" style="width:100%;image-rendering:pixelated;background:#000;border-radius:6px"><br><button class="small primary" onclick="loadStrip('assets/Warrior_Attack2.png',4,'Warrior Attack 2')">▶ Load 4 frames</button></div>
+<div style="flex:1;min-width:220px;background:#0e1430;border:1px solid var(--border);border-radius:10px;padding:8px"><b style="font-size:13px">Pawn idles — 8f each</b><br><img src="assets/Pawn_Idle Axe.png" style="width:100%;image-rendering:pixelated;background:#000;border-radius:6px"><br>
+<div class="row"><button class="small" onclick="loadStrip('assets/Pawn_Idle Axe.png',8,'Pawn Axe')">Axe</button><button class="small" onclick="loadStrip('assets/Pawn_Idle Hammer.png',8,'Pawn Hammer')">Hammer</button><button class="small" onclick="loadStrip('assets/Pawn_Idle Pickaxe.png',8,'Pawn Pickaxe')">Pickaxe</button><button class="small" onclick="loadStrip('assets/Pawn_Idle Knife.png',8,'Pawn Knife')">Knife</button><button class="small" onclick="loadStrip('assets/Pawn_Idle Gold.png',8,'Pawn Gold')">Gold</button><button class="small" onclick="loadStrip('assets/Pawn_Idle Meat.png',8,'Pawn Meat')">Meat</button></div></div>
+</div>
+<div class="row"><button class="small" onclick="loadWarriorSet()">⚔️ Load FULL warrior set (all 5 anims → pick from filmstrip)</button><span class="muted" style="font-size:12px">Full-set loads Guard first; use filmstrip + Export PNG Sheet per anim.</span></div>
+</div>
+</section>
+</main>
+</div>
+<footer><span id="status">Ready • PixelForge prototype</span><span style="margin-left:auto">Made for solo indie devs • exports work with Godot / Unity / Phaser</span></footer>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2200);$('#status').textContent=m;}
+function download(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click();}
+/* ---------- TABS ---------- */
+$$('nav .tab').forEach(b=>b.onclick=()=>{$$('nav .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.panel').forEach(p=>p.classList.remove('active'));$('#tab-'+b.dataset.tab).classList.add('active');if(b.dataset.tab==='levels')renderLevelPalette(),drawMap();if(b.dataset.tab==='tiles')drawTileset();});
+/* ---------- SPRITES ---------- */
+let sprSize=32, sprTool='pencil', sprColor='#7c5cff', frames=[], curFrame=0, playing=false, playTimer=null, drawing=false, startPx=null, snap=null;
+const sprCanvas=$('#sprCanvas'), sctx=sprCanvas.getContext('2d'); sctx.imageSmoothingEnabled=false;
+const animCanvas=$('#animCanvas'), actx=animCanvas.getContext('2d'); actx.imageSmoothingEnabled=false;
+const pal=['#000000','#1e1e2e','#5a5a7a','#ffffff','#ff6b6b','#ffa94d','#ffe066','#8ce99a','#22c55e','#12b886','#22d3ee','#4dabf7','#7c5cff','#b197fc','#f783ac','#a16207','#88540f','#5c3d00','#9db2ff','#0b1020','#ff0000','#00ff88','#ffcc00','#6633ff'];
+function newFrameCanvas(fill){const c=document.createElement('canvas');c.width=c.height=sprSize;const x=c.getContext('2d');x.imageSmoothingEnabled=false;if(fill){x.fillStyle=fill;x.fillRect(0,0,sprSize,sprSize);}return c;}
+function initSprites(){frames=[newFrameCanvas(),newFrameCanvas()];presetSlime(true);curFrame=0;renderSwatches();renderFilmstrip();drawSprite();}
+function renderSwatches(){const w=$('#swatches');w.innerHTML='';pal.forEach(c=>{const d=document.createElement('div');d.className='sw'+(c===sprColor?' active':'');d.style.background=c;d.onclick=()=>{sprColor=c;$('#sprColor').value=c;$('#sprHex').value=c;renderSwatches();};w.appendChild(d);});}
+function addSwatch(){pal.push($('#sprColor').value);renderSwatches();}
+$('#sprColor').oninput=e=>{sprColor=e.target.value;$('#sprHex').value=sprColor;};$('#sprHex').oninput=e=>{sprColor=e.target.value;$('#sprColor').value=sprColor;};
+$('#spriteTools').addEventListener('click',e=>{if(e.target.dataset.t){sprTool=e.target.dataset.t;$$('#spriteTools button').forEach(b=>b.classList.toggle('active',b===e.target));}});
+$('#sprSize').onchange=e=>{sprSize=+e.target.value;frames=frames.map(()=>newFrameCanvas());curFrame=0;renderFilmstrip();drawSprite();saveProject();};
+$('#fps').oninput=e=>{$('#fpsV').textContent=e.target.value;if(playing)togglePlay(),togglePlay();};
+function frameCtx(){return frames[curFrame].getContext('2d');}
+function px(c,x,y,col,erase){if(x<0||y<0||x>=sprSize||y>=sprSize)return;c.fillStyle=col;c.globalCompositeOperation=erase?'destination-out':'source-over';c.fillRect(x,y,1,1);c.globalCompositeOperation='source-over';}
+function flood(c,sx,sy,col){const img=c.getImageData(0,0,sprSize,sprSize),d=img.data;const si=(sy*sprSize+sx)*4,t=[d[si],d[si+1],d[si+2],d[si+3]];const rgb=hexToRgb(col);const st=[[sx,sy]],seen=new Set([sy*sprSize+sx]);const match=(i)=>Math.abs(d[i]-t[0])<8&&Math.abs(d[i+1]-t[1])<8&&Math.abs(d[i+2]-t[2])<8&&Math.abs(d[i+3]-t[3])<8;while(st.length){const[x,y]=st.pop();if(x<0||y<0||x>=sprSize||y>=sprSize)continue;const k=y*sprSize+x;if(seen.has(k)&&!(x===sx&&y===sy)){}const i=k*4;if(!match(i))continue;d[i]=rgb[0];d[i+1]=rgb[1];d[i+2]=rgb[2];d[i+3]=255;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nx=x+dx,ny=y+dy,nk=ny*sprSize+nx;if(nx>=0&&ny>=0&&nx<sprSize&&ny<sprSize&&!seen.has(nk)){seen.add(nk);st.push([nx,ny]);}});}c.putImageData(img,0,0);}
+function hexToRgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function bres(x0,y0,x1,y1,fn){let dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1,e=dx+dy;while(true){fn(x0,y0);if(x0===x1&&y0===y1)break;let e2=2*e;if(e2>=dy){e+=dy;x0+=sx;}if(e2<=dx){e+=dx;y0+=sy;}}}
+function spritePos(e){const r=sprCanvas.getBoundingClientRect();const sc=sprCanvas.width/sprSize;return[Math.floor((e.clientX-r.left)/r.width*sprSize),Math.floor((e.clientY-r.top)/r.height*sprSize)];}
+sprCanvas.addEventListener('pointerdown',e=>{sprCanvas.setPointerCapture(e.pointerId);drawing=true;const[x,y]=spritePos(e);startPx=[x,y];snap=frameCtx().getImageData(0,0,sprSize,sprSize);handleDraw(x,y,false);});
+sprCanvas.addEventListener('pointermove',e=>{if(!drawing)return;const[x,y]=spritePos(e);handleDraw(x,y,true);});
+addEventListener('pointerup',()=>{if(drawing){drawing=false;renderFilmstrip();drawSprite();saveProject();}});
+function handleDraw(x,y,drag){const c=frameCtx();
+if(sprTool==='picker'){const d=c.getImageData(x,y,1,1).data;if(d[3]>0){sprColor='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');$('#sprColor').value=sprColor;$('#sprHex').value=sprColor;renderSwatches();}sprTool='pencil';$$('#spriteTools button').forEach(b=>b.classList.toggle('active',b.dataset.t==='pencil'));return;}
+const mir=document.getElementById('mirrorMode')&&document.getElementById('mirrorMode').checked;
+const mpx2=(a,b,col,er)=>{px(c,a,b,col,er);if(mir)px(c,sprSize-1-a,b,col,er);};
+if(sprTool==='pencil'){if(drag&&startPx){bres(startPx[0],startPx[1],x,y,(a,b)=>mpx2(a,b,sprColor));startPx=[x,y];}else mpx2(x,y,sprColor);drawSprite();return;}
+if(sprTool==='eraser'){if(drag&&startPx){bres(startPx[0],startPx[1],x,y,(a,b)=>mpx2(a,b,'#000',true));startPx=[x,y];}else mpx2(x,y,'#000',true);drawSprite();return;}
+if(sprTool==='fill'){if(!drag)flood(c,x,y,sprColor);drawSprite();return;}
+// shapes preview
+c.putImageData(snap,0,0);
+if(sprTool==='line')bres(startPx[0],startPx[1],x,y,(a,b)=>px(c,a,b,sprColor));
+if(sprTool==='rect'){const[x0,y0]=startPx;for(let i=Math.min(x0,x);i<=Math.max(x0,x);i++){px(c,i,Math.min(y0,y),sprColor);px(c,i,Math.max(y0,y),sprColor);}for(let j=Math.min(y0,y);j<=Math.max(y0,y);j++){px(c,Math.min(x0,x),j,sprColor);px(c,Math.max(x0,x),j,sprColor);}}
+if(sprTool==='circle'){const[x0,y0]=startPx;const r=Math.hypot(x-x0,y-y0);for(let a=0;a<360;a+=2){px(c,Math.round(x0+Math.cos(a*Math.PI/180)*r),Math.round(y0+Math.sin(a*Math.PI/180)*r),sprColor);}}
+drawSprite();}
+function drawSprite(){const S=sprCanvas.width/sprSize;sctx.clearRect(0,0,sprCanvas.width,sprCanvas.height);
+if($('#onion').checked&&frames[curFrame-1]){sctx.globalAlpha=.25;sctx.drawImage(frames[curFrame-1],0,0,sprCanvas.width,sprCanvas.height);sctx.globalAlpha=1;}
+sctx.drawImage(frames[curFrame],0,0,sprCanvas.width,sprCanvas.height);
+if($('#showGrid').checked){sctx.strokeStyle='rgba(140,160,255,.18)';sctx.lineWidth=1;for(let i=0;i<=sprSize;i++){sctx.beginPath();sctx.moveTo(i*S+.5,0);sctx.lineTo(i*S+.5,sprCanvas.height);sctx.stroke();sctx.beginPath();sctx.moveTo(0,i*S+.5);sctx.lineTo(sprCanvas.width,i*S+.5);sctx.stroke();}}
+$('#frameLabel').textContent=`Frame ${curFrame+1} / ${frames.length} — ${sprSize}×${sprSize}px`;}
+function renderFilmstrip(){const f=$('#filmstrip');f.innerHTML='';frames.forEach((c,i)=>{const d=document.createElement('div');d.className='frame'+(i===curFrame?' active':'');d.innerHTML=`<img src="${c.toDataURL()}"><div>#${i+1}</div>`;d.onclick=()=>{curFrame=i;renderFilmstrip();drawSprite();};f.appendChild(d);});}
+function addFrame(){frames.splice(curFrame+1,0,newFrameCanvas());curFrame++;renderFilmstrip();drawSprite();saveProject();}
+function dupFrame(){const n=newFrameCanvas();n.getContext('2d').drawImage(frames[curFrame],0,0);frames.splice(curFrame+1,0,n);curFrame++;renderFilmstrip();drawSprite();saveProject();}
+function delFrame(){if(frames.length<=1)return toast('Need at least 1 frame');frames.splice(curFrame,1);curFrame=Math.max(0,curFrame-1);renderFilmstrip();drawSprite();saveProject();}
+function clearFrame(){frameCtx().clearRect(0,0,sprSize,sprSize);drawSprite();renderFilmstrip();saveProject();}
+function mirrorFrame(){const c=frameCtx(),img=c.getImageData(0,0,sprSize,sprSize),o=c.createImageData(sprSize,sprSize);for(let y=0;y<sprSize;y++)for(let x=0;x<sprSize;x++){const s=(y*sprSize+x)*4,d=(y*sprSize+(sprSize-1-x))*4;for(let k=0;k<4;k++)o.data[d+k]=img.data[s+k];}c.putImageData(o,0,0);drawSprite();renderFilmstrip();}
+function shiftFrame(dx,dy){const c=frameCtx(),t=newFrameCanvas();t.getContext('2d').drawImage(frames[curFrame],dx,dy);c.clearRect(0,0,sprSize,sprSize);c.drawImage(t,0,0);drawSprite();renderFilmstrip();}
+function togglePlay(){playing=!playing;$('#playBtn').textContent=playing?'⏸ Pause':'▶ Play';if(playing){let i=0;const draw=()=>{actx.clearRect(0,0,128,128);actx.drawImage(frames[i%frames.length],0,0,128,128);i++;};draw();playTimer=setInterval(draw,1000/+$('#fps').value);}else clearInterval(playTimer);}
+function drawPixelRect(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(x,y,w,h);}
+function presetSlime(silent){sprSize=32;$('#sprSize').value='32';frames=[newFrameCanvas(),newFrameCanvas()];const f0=frames[0].getContext('2d'),f1=frames[1].getContext('2d');
+[[f0,0],[f1,2]].forEach(([c,dy])=>{drawPixelRect(c,8,14+dy,16,12,'#22c55e');drawPixelRect(c,10,12+dy,12,4,'#4ade80');drawPixelRect(c,11,24+dy,4,2,'#15803d');drawPixelRect(c,17,24+dy,4,2,'#15803d');drawPixelRect(c,11,17+dy,4,5,'#ffffff');drawPixelRect(c,17,17+dy,4,5,'#ffffff');drawPixelRect(c,12,18+dy,2,3,'#0b1020');drawPixelRect(c,18,18+dy,2,3,'#0b1020');drawPixelRect(c,13,21+dy,4,2,'#fda4af');});
+curFrame=0;renderFilmstrip();drawSprite();if(!silent)toast('Slime loaded — 2 frames');saveProject();}
+function presetHero(){sprSize=32;$('#sprSize').value='32';frames=[newFrameCanvas()];const c=frames[0].getContext('2d');drawPixelRect(c,12,4,8,8,'#fcd7a1');drawPixelRect(c,12,2,8,4,'#5b3a1e');drawPixelRect(c,13,12,6,8,'#7c5cff');drawPixelRect(c,11,12,2,6,'#fcd7a1');drawPixelRect(c,19,12,2,6,'#fcd7a1');drawPixelRect(c,13,20,2,8,'#1e293b');drawPixelRect(c,17,20,2,8,'#1e293b');drawPixelRect(c,13,28,2,2,'#0b1020');drawPixelRect(c,17,28,2,2,'#0b1020');curFrame=0;renderFilmstrip();drawSprite();toast('Hero base loaded');saveProject();}
+function presetCoin(){sprSize=32;$('#sprSize').value='32';frames=[newFrameCanvas(),newFrameCanvas(),newFrameCanvas()];const cols=['#ffe066','#ffd43b','#fab005'];frames.forEach((f,i)=>{const c=f.getContext('2d');const w=[12,8,4][i];drawPixelRect(c,16-w/2,8,w,16,cols[i]);drawPixelRect(c,16-w/2+2,10,2,12,'#fff3bf');});curFrame=0;renderFilmstrip();drawSprite();toast('Coin spin loaded');saveProject();}
+function presetTree(){sprSize=32;$('#sprSize').value='32';frames=[newFrameCanvas()];const c=frames[0].getContext('2d');drawPixelRect(c,14,22,4,8,'#7c4a21');drawPixelRect(c,8,12,16,12,'#15803d');drawPixelRect(c,10,6,12,8,'#22c55e');curFrame=0;renderFilmstrip();drawSprite();saveProject();}
+function autoShade(){const c=frameCtx(),img=c.getImageData(0,0,sprSize,sprSize),d=img.data;for(let y=0;y<sprSize;y++)for(let x=0;x<sprSize;x++){const i=(y*sprSize+x)*4;if(d[i+3]>0&&(x+y)>sprSize){d[i]=Math.max(0,d[i]*.78);d[i+1]=Math.max(0,d[i+1]*.78);d[i+2]=Math.max(0,d[i+2]*.78);}}c.putImageData(img,0,0);drawSprite();renderFilmstrip();toast('Shading applied');}
+function downloadSpriteSheet(){const W=sprSize*frames.length,H=sprSize,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');frames.forEach((f,i)=>x.drawImage(f,i*sprSize,0));download(c.toDataURL(),'spritesheet.png');toast(`Sheet exported: ${W}×${H}`);}
+function downloadFrame(){download(frames[curFrame].toDataURL(),'sprite-frame.png');}
+function copySpriteJSON(){const j=JSON.stringify({frameWidth:sprSize,frameHeight:sprSize,frames:frames.length,meta:{app:'PixelForge'}},null,2);navigator.clipboard.writeText(j).then(()=>toast('Sprite JSON copied'));}
+/* ---------- TILESET ---------- */
+const T=16,TC=8,TR=8;let tiles=[],selTile=0,tileTool='pencil',tileColor='#22c55e',tileDrawing=false;
+const tsCanvas=$('#tilesetCanvas'),tsctx=tsCanvas.getContext('2d');tsctx.imageSmoothingEnabled=false;
+const tileCanvas=$('#tileCanvas'),tctx=tileCanvas.getContext('2d');tctx.imageSmoothingEnabled=false;
+$('#tileTools').addEventListener('click',e=>{if(e.target.dataset.t){tileTool=e.target.dataset.t;$$('#tileTools button').forEach(b=>b.classList.toggle('active',b===e.target));}});
+$('#tileColor').oninput=e=>tileColor=e.target.value;
+function newTile(){const c=document.createElement('canvas');c.width=c.height=T;return c;}
+function initTiles(){tiles=Array.from({length:TC*TR},()=>newTile());genFantasyTiles(true);drawTileset();drawTileEditor();}
+function tex(c,base,vary,n=40){c.fillStyle=base;c.fillRect(0,0,T,T);for(let i=0;i<n;i++){c.fillStyle=vary[Math.floor(Math.random()*vary.length)];c.globalAlpha=.5+Math.random()*.5;c.fillRect(Math.floor(Math.random()*T),Math.floor(Math.random()*T),2,2);}c.globalAlpha=1;}
+function genFantasyTiles(silent){const defs=[['#3fa34d',['#2d7a36','#57c46b','#8ce99a']],['#4a9e3f',['#2d7a36','#8ce99a']],['#3b82f6',['#1d4ed8','#93c5fd','#ffffff']],['#2563eb',['#1e40af','#60a5fa']],['#9a8c7a',['#6b5d4f','#c9bda9']],['#7d6f5f',['#575046','#a89c8c']],['#8b5e34',['#5c3d1e','#c08a4e']],['#2f3b2f',['#1a241a','#5a6e5a']]];
+for(let i=0;i<64;i++){const c=tiles[i].getContext('2d');const d=defs[i%defs.length];tex(c,d[0],d[1],i<8?60:30);}drawTileset();drawTileEditor();if(!silent)toast('Fantasy tiles generated');saveProject();}
+function genDungeonTiles(){for(let i=0;i<64;i++){const c=tiles[i].getContext('2d');tex(c,['#2b2f45','#343a55','#1c1f33'][i%3],['#4a557e','#14172a','#7c8ab8'],50);if(i%5===0){c.fillStyle='#12b886';c.fillRect(6,6,4,4);}}drawTileset();drawTileEditor();toast('Dungeon set generated');saveProject();}
+function clearTiles(){tiles.forEach(t=>t.getContext('2d').clearRect(0,0,T,T));drawTileset();drawTileEditor();}
+function fillTile(){const c=tiles[selTile].getContext('2d');c.fillStyle=tileColor;c.fillRect(0,0,T,T);drawTileset();drawTileEditor();saveProject();}
+function noiseTile(){const c=tiles[selTile].getContext('2d');tex(c,tileColor,['#ffffff','#000000',tileColor],60);drawTileset();drawTileEditor();}
+function copyTileToAll(){const src=tiles[selTile];tiles.forEach((t,i)=>{if(i===selTile)return;const c=t.getContext('2d');if(c.getImageData(0,0,1,1).data[3]===0&&isTileEmpty(t))c.drawImage(src,0,0);});drawTileset();toast('Copied to empty tiles');}
+function isTileEmpty(t){const d=t.getContext('2d').getImageData(0,0,T,T).data;for(let i=3;i<d.length;i+=4)if(d[i]>0)return false;return true;}
+function drawTileset(){const S=tsCanvas.width/TC;tsctx.clearRect(0,0,tsCanvas.width,tsCanvas.height);tiles.forEach((t,i)=>{const x=(i%TC)*S,y=Math.floor(i/TC)*S;tsctx.drawImage(t,x,y,S,S);if(i===selTile){tsctx.strokeStyle='#22d3ee';tsctx.lineWidth=4;tsctx.strokeRect(x+2,y+2,S-4,S-4);}});tsctx.strokeStyle='rgba(140,160,255,.2)';tsctx.lineWidth=1;for(let i=0;i<=TC;i++){tsctx.beginPath();tsctx.moveTo(i*S,0);tsctx.lineTo(i*S,tsCanvas.height);tsctx.stroke();}for(let j=0;j<=TR;j++){tsctx.beginPath();tsctx.moveTo(0,j*S);tsctx.lineTo(tsCanvas.width,j*S);tsctx.stroke();}}
+function drawTileEditor(){$('#tileId').textContent=selTile;const S=tileCanvas.width/T;tctx.clearRect(0,0,320,320);tctx.drawImage(tiles[selTile],0,0,320,320);tctx.strokeStyle='rgba(140,160,255,.25)';for(let i=0;i<=T;i++){tctx.beginPath();tctx.moveTo(i*S+.5,0);tctx.lineTo(i*S+.5,320);tctx.stroke();tctx.beginPath();tctx.moveTo(0,i*S+.5);tctx.lineTo(320,i*S+.5);tctx.stroke();}}
+tsCanvas.addEventListener('click',e=>{const r=tsCanvas.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*TC),y=Math.floor((e.clientY-r.top)/r.height*TR);selTile=y*TC+x;drawTileset();drawTileEditor();if($('#tab-levels').classList.contains('active'))renderLevelPalette();});
+function tilePos(e){const r=tileCanvas.getBoundingClientRect();return[Math.floor((e.clientX-r.left)/r.width*T),Math.floor((e.clientY-r.top)/r.height*T)];}
+tileCanvas.addEventListener('pointerdown',e=>{tileDrawing=true;tileCanvas.setPointerCapture(e.pointerId);tp(e);});
+tileCanvas.addEventListener('pointermove',e=>{if(tileDrawing)tp(e);});
+addEventListener('pointerup',()=>{if(tileDrawing){tileDrawing=false;drawTileset();saveProject();try{commitTile();}catch(e){}}});
+function tp(e){const[x,y]=tilePos(e);const c=tiles[selTile].getContext('2d');if(tileTool==='picker'){const d=c.getImageData(x,y,1,1).data;if(d[3]>0){tileColor='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');$('#tileColor').value=tileColor;}}else if(tileTool==='fill'){floodTile(c,x,y,tileColor);}else if(tileTool==='eraser'){c.clearRect(x,y,1,1);}else{c.fillStyle=tileColor;c.fillRect(x,y,1,1);}drawTileEditor();}
+function floodTile(c,sx,sy,col){const img=c.getImageData(0,0,T,T),d=img.data;const si=(sy*T+sx)*4,t=[d[si],d[si+1],d[si+2],d[si+3]];const rgb=hexToRgb(col);const st=[[sx,sy]],seen=new Set();while(st.length){const[x,y]=st.pop();if(x<0||y<0||x>=T||y>=T)continue;const k=y*T+x;if(seen.has(k))continue;seen.add(k);const i=k*4;if(Math.abs(d[i]-t[0])>8||Math.abs(d[i+1]-t[1])>8||Math.abs(d[i+2]-t[2])>8||Math.abs(d[i+3]-t[3])>8)continue;d[i]=rgb[0];d[i+1]=rgb[1];d[i+2]=rgb[2];d[i+3]=255;st.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);}c.putImageData(img,0,0);}
+/* ---------- LEVELS ---------- */
+let mapW=24,mapH=16,ground=[],deco=[],coll=[],entities=[],brush={type:'tile',index:0},mapDraw=false;
+const mapCanvas=$('#mapCanvas'),mctx=mapCanvas.getContext('2d');mctx.imageSmoothingEnabled=false;
+function blankMap(){ground=Array.from({length:mapH},()=>Array(mapW).fill(0));deco=Array.from({length:mapH},()=>Array(mapW).fill(-1));coll=Array.from({length:mapH},()=>Array(mapW).fill(0));entities=[];}
+function resizeMap(){mapW=+$('#mapW').value;mapH=+$('#mapH').value;blankMap();sizeMapCanvas();drawMap();saveProject();}
+function sizeMapCanvas(){const ts=32;mapCanvas.width=mapW*ts;mapCanvas.height=mapH*ts;$('#mapInfo').textContent=`${mapW}×${mapH} • ${mapW*mapH} cells`;}
+function renderLevelPalette(){const p=$('#levelPalette');p.innerHTML='';tiles.forEach((t,i)=>{const img=document.createElement('img');img.src=t.toDataURL();img.title='Tile '+i;if(brush.type==='tile'&&brush.index===i)img.classList.add('sel');img.onclick=()=>{brush={type:'tile',index:i};$('#layerSel').value=i<0?'ground':'ground';renderLevelPalette();};p.appendChild(img);});
+$$('.entityBtns button').forEach(b=>b.onclick=()=>{const k=b.dataset.ent;if(k==='erase')brush={type:'erase'};else{$('#layerSel').value='entity';brush={type:'entity',kind:k};}$$('#levelPalette img').forEach(x=>x.classList.remove('sel'));toast('Brush: '+k);});}
+$('#layerSel').onchange=e=>{if(e.target.value!=='entity'&&brush.type==='entity')brush={type:'tile',index:0};renderLevelPalette();};
+function mapCell(e){const r=mapCanvas.getBoundingClientRect();return[Math.floor((e.clientX-r.left)/r.width*mapW),Math.floor((e.clientY-r.top)/r.height*mapH)];}
+mapCanvas.addEventListener('pointerdown',e=>{mapDraw=true;mapCanvas.setPointerCapture(e.pointerId);paintMap(e);});
+mapCanvas.addEventListener('pointermove',e=>{if(mapDraw)paintMap(e);});
+addEventListener('pointerup',()=>{if(mapDraw){mapDraw=false;saveProject();}});
+function paintMap(e){const[x,y]=mapCell(e);if(x<0||y<0||x>=mapW||y>=mapH)return;const layer=$('#layerSel').value;
+if(brush.type==='erase'){ground[y][x]=-1;deco[y][x]=-1;coll[y][x]=0;entities=entities.filter(en=>!(en.x===x&&en.y===y));}
+else if(layer==='entity'||brush.type==='entity'){entities=entities.filter(en=>!(en.x===x&&en.y===y));if(brush.type==='entity')entities.push({x,y,kind:brush.kind});}
+else if(layer==='ground'){ground[y][x]=brush.type==='tile'?brush.index:-1;}
+else if(layer==='deco'){deco[y][x]=brush.type==='tile'?brush.index:-1;}
+else if(layer==='collision'){coll[y][x]=coll[y][x]?0:1;if(!mapDraw)coll[y][x]=1;else coll[y][x]=1;}
+drawMap();}
+function drawMap(){if(!mapCanvas.width)sizeMapCanvas();const ts=mapCanvas.width/mapW;mctx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
+for(let y=0;y<mapH;y++)for(let x=0;x<mapW;x++){if(ground[y][x]>=0)mctx.drawImage(tiles[ground[y][x]],x*ts,y*ts,ts,ts);else{mctx.fillStyle=(x+y)%2?'#131a30':'#0e1430';mctx.fillRect(x*ts,y*ts,ts,ts);}}
+for(let y=0;y<mapH;y++)for(let x=0;x<mapW;x++)if(deco[y][x]>=0)mctx.drawImage(tiles[deco[y][x]],x*ts,y*ts,ts,ts);
+if($('#showColl').checked){mctx.fillStyle='rgba(239,68,68,.35)';for(let y=0;y<mapH;y++)for(let x=0;x<mapW;x++)if(coll[y][x]){mctx.fillRect(x*ts,y*ts,ts,ts);mctx.strokeStyle='#ef4444';mctx.strokeRect(x*ts+2,y*ts+2,ts-4,ts-4);}}
+const em={'spawn':'🧍','enemy':'👾','coin':'🪙','exit':'🚪'};mctx.font=`${ts*0.7}px serif`;mctx.textAlign='center';mctx.textBaseline='middle';entities.forEach(en=>mctx.fillText(em[en.kind]||'●',en.x*ts+ts/2,en.y*ts+ts/2));
+if($('#showGridL').checked){mctx.strokeStyle='rgba(140,160,255,.15)';for(let i=0;i<=mapW;i++){mctx.beginPath();mctx.moveTo(i*ts+.5,0);mctx.lineTo(i*ts+.5,mapCanvas.height);mctx.stroke();}for(let j=0;j<=mapH;j++){mctx.beginPath();mctx.moveTo(0,j*ts+.5);mctx.lineTo(mapCanvas.width,j*ts+.5);mctx.stroke();}}}
+function fillMapGround(){for(let y=0;y<mapH;y++)for(let x=0;x<mapW;x++)ground[y][x]=0;drawMap();saveProject();}
+function clearMap(){blankMap();drawMap();saveProject();}
+function demoMap(){blankMap();for(let y=0;y<mapH;y++)for(let x=0;x<mapW;x++){ground[y][x]=(x+y)%7===0?1:0;if(x===0||y===0||x===mapW-1||y===mapH-1){ground[y][x]=4;coll[y][x]=1;}}for(let x=5;x<10;x++){ground[8][x]=2;deco[7][x]=7;}entities=[{x:2,y:2,kind:'spawn'},{x:20,y:12,kind:'exit'},{x:12,y:5,kind:'enemy'},{x:8,y:8,kind:'coin'},{x:9,y:8,kind:'coin'}];drawMap();saveProject();toast('Demo level painted');}
+function downloadMapPNG(){const c=document.createElement('canvas');c.width=mapCanvas.width;c.height=mapCanvas.height;const x=c.getContext('2d');const ts=c.width/mapW;for(let y=0;y<mapH;y++)for(let xx=0;xx<mapW;xx++)if(ground[y][xx]>=0)x.drawImage(tiles[ground[y][xx]],xx*ts,y*ts,ts,ts);for(let y=0;y<mapH;y++)for(let xx=0;xx<mapW;xx++)if(deco[y][xx]>=0)x.drawImage(tiles[deco[y][xx]],xx*ts,y*ts,ts,ts);download(c.toDataURL(),'level.png');toast('Level PNG exported');}
+function copyMapJSON(){const j=JSON.stringify({width:mapW,height:mapH,tilewidth:16,tileheight:16,layers:{ground,deco,collision:coll},entities},null,2);navigator.clipboard.writeText(j).then(()=>toast('Level JSON copied'));}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();if(k==='g')$('#layerSel').value='ground';if(k==='d')$('#layerSel').value='deco';if(k==='c')$('#layerSel').value='collision';if(k==='e')$('#layerSel').value='entity';});
+/* ---------- LAB ---------- */
+const labCanvas=$('#labCanvas'),lctx=labCanvas.getContext('2d');let labImg=null;
+$('#imgUp').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{labImg=img;applyLab();};img.src=URL.createObjectURL(f);};
+['labPx','labSat','labCon','labHue'].forEach(id=>$('#'+id).oninput=applyLab);
+['labScan','labVig','labOutline'].forEach(id=>$('#'+id).onchange=()=>applyLab());
+$('#labPx').oninput=e=>{$('#pxV').textContent=e.target.value;applyLab();};$('#labSat').oninput=e=>{$('#satV').textContent=e.target.value+'%';applyLab();};$('#labCon').oninput=e=>{$('#conV').textContent=e.target.value+'%';applyLab();};$('#labHue').oninput=e=>{$('#hueV').textContent=e.target.value+'°';applyLab();};
+function labSample(){const c=document.createElement('canvas');c.width=640;c.height=400;const x=c.getContext('2d');const g=x.createLinearGradient(0,0,640,400);g.addColorStop(0,'#ff9a56');g.addColorStop(.5,'#7c5cff');g.addColorStop(1,'#0ea5e9');x.fillStyle=g;x.fillRect(0,0,640,400);x.fillStyle='#0b1020';for(let i=0;i<14;i++){x.globalAlpha=.85;x.beginPath();x.moveTo(Math.random()*640,400);x.lineTo(Math.random()*640,150+Math.random()*150);x.lineTo(Math.random()*640,400);x.fill();}x.globalAlpha=1;x.fillStyle='#ffe066';x.beginPath();x.arc(520,90,44,0,7);x.fill();const img=new Image();img.onload=()=>{labImg=img;applyLab();};img.src=c.toDataURL();}
+function applyLab(fromBtn){if(!labImg){if(fromBtn)toast('Upload an image first (or use sample)');else labSampleSilent();return;}const W=labCanvas.width,H=labCanvas.height;const px=+$('#labPx').value;const small=document.createElement('canvas');small.width=Math.max(1,Math.floor(W/px));small.height=Math.max(1,Math.floor(H/px));const sx=small.getContext('2d');sx.filter=`saturate(${$('#labSat').value}%) contrast(${$('#labCon').value}%) hue-rotate(${$('#labHue').value}deg)`;sx.drawImage(labImg,0,0,small.width,small.height);lctx.imageSmoothingEnabled=false;lctx.filter='none';lctx.clearRect(0,0,W,H);lctx.drawImage(small,0,0,W,H);
+if($('#labScan').checked){lctx.fillStyle='rgba(0,0,0,.18)';for(let y=0;y<H;y+=4)lctx.fillRect(0,y,W,1);}
+if($('#labVig').checked){const g=lctx.createRadialGradient(W/2,H/2,H/3,W/2,H/2,W/1.2);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.45)');lctx.fillStyle=g;lctx.fillRect(0,0,W,H);}
+if($('#labOutline').checked){lctx.strokeStyle='rgba(5,8,20,.9)';lctx.lineWidth=10;lctx.strokeRect(5,5,W-10,H-10);}}
+function labSampleSilent(){if(labImg)return;const c=document.createElement('canvas');c.width=640;c.height=400;const x=c.getContext('2d');x.fillStyle='#7c5cff';x.fillRect(0,0,640,400);x.fillStyle='#22d3ee';x.fillRect(0,250,640,150);const img=new Image();img.onload=()=>{labImg=img;applyLab();};img.src=c.toDataURL();}
+function sendLabToSprite(){if(!labImg)return toast('Nothing to send');const c=frameCtx();c.imageSmoothingEnabled=false;c.clearRect(0,0,sprSize,sprSize);c.drawImage(labCanvas,0,0,sprSize,sprSize);$$('nav .tab')[0].click();drawSprite();renderFilmstrip();toast('Lab art → current sprite frame');saveProject();}
+function downloadLab(){download(labCanvas.toDataURL(),'graphics-lab.png');}
+/* ---------- NEW FX TOOLS ---------- */
+function flipV(){const c=frameCtx(),img=c.getImageData(0,0,sprSize,sprSize),o=c.createImageData(sprSize,sprSize);for(let y=0;y<sprSize;y++)for(let x=0;x<sprSize;x++){const s=(y*sprSize+x)*4,d=((sprSize-1-y)*sprSize+x)*4;for(let k=0;k<4;k++)o.data[d+k]=img.data[s+k];}c.putImageData(o,0,0);drawSprite();renderFilmstrip();saveProject();}
+function rotateFrame(){const c=frameCtx(),t=newFrameCanvas();const x=t.getContext('2d');x.translate(sprSize/2,sprSize/2);x.rotate(Math.PI/2);x.drawImage(frames[curFrame],-sprSize/2,-sprSize/2);c.clearRect(0,0,sprSize,sprSize);c.drawImage(t,0,0);drawSprite();renderFilmstrip();saveProject();}
+function eachPx(fn){const c=frameCtx(),img=c.getImageData(0,0,sprSize,sprSize),d=img.data;for(let i=0;i<d.length;i+=4)fn(d,i);c.putImageData(img,0,0);drawSprite();renderFilmstrip();saveProject();}
+function fxInvert(){eachPx((d,i)=>{if(d[i+3]>0){d[i]=255-d[i];d[i+1]=255-d[i+1];d[i+2]=255-d[i+2];}});toast('Inverted');}
+function fxAdjust(v){eachPx((d,i)=>{if(d[i+3]>0){d[i]=Math.max(0,Math.min(255,d[i]+v));d[i+1]=Math.max(0,Math.min(255,d[i+1]+v));d[i+2]=Math.max(0,Math.min(255,d[i+2]+v));}});}
+function fxBlackToAlpha(){eachPx((d,i)=>{if(d[i+3]>0&&d[i]<28&&d[i+1]<28&&d[i+2]<28)d[i+3]=0;});toast('Black → transparent');}
+function fxDither(){const c=frameCtx(),img=c.getImageData(0,0,sprSize,sprSize),d=img.data;for(let y=0;y<sprSize;y++)for(let x=0;x<sprSize;x++){const i=(y*sprSize+x)*4;if(d[i+3]>0&&((x+y)%2===0)){d[i]=d[i]*.7;d[i+1]=d[i+1]*.7;d[i+2]=d[i+2]*.7;}}c.putImageData(img,0,0);drawSprite();renderFilmstrip();toast('Dithered');}
+function fxOutline(){const c=frameCtx(),img=c.getImageData(0,0,sprSize,sprSize),d=img.data,A=(x,y)=>(x<0||y<0||x>=sprSize||y>=sprSize)?0:d[(y*sprSize+x)*4+3];const out=c.createImageData(sprSize,sprSize);for(let y=0;y<sprSize;y++)for(let x=0;x<sprSize;x++){const i=(y*sprSize+x)*4;out.data[i]=d[i];out.data[i+1]=d[i+1];out.data[i+2]=d[i+2];out.data[i+3]=d[i+3];if(d[i+3]===0&&((A(x+1,y)>0)||(A(x-1,y)>0)||(A(x,y+1)>0)||(A(x,y-1)>0))){out.data[i]=11;out.data[i+1]=16;out.data[i+2]=32;out.data[i+3]=255;}}c.putImageData(out,0,0);drawSprite();renderFilmstrip();toast('Outline added');}
+function fxRetro16(){const Q=v=>Math.round(v/51)*51;eachPx((d,i)=>{if(d[i+3]>0){d[i]=Q(d[i]);d[i+1]=Q(d[i+1]);d[i+2]=Q(d[i+2]);}});toast('Retro-16 palette');}
+function fxSmooth(){const c=frameCtx(),t=newFrameCanvas();const x=t.getContext('2d');x.imageSmoothingEnabled=true;x.drawImage(frames[curFrame],0,0);c.clearRect(0,0,sprSize,sprSize);c.drawImage(t,0,0);drawSprite();renderFilmstrip();}
+/* ---------- SHEET SLICER ---------- */
+let sheetImg=null;
+const sheetPreview=document.getElementById('sheetPreview'),spctx=sheetPreview.getContext('2d');
+document.getElementById('sheetUp').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{sheetImg=img;drawSheetPreview();};img.src=URL.createObjectURL(f);};
+function loadDarkKnight(){const img=new Image();img.onload=()=>{sheetImg=img;drawSheetPreview();$('#sliceCols').value=6;$('#sliceRows').value=3;$('#sheetInfo').textContent='Dark Knight loaded (433×160) — try 6×3, Slice → Frames.';toast('Dark Knight in slicer');};img.onerror=()=>toast('dark-knight.png missing — re-upload it');img.src='dark-knight.png';}
+function drawSheetPreview(){if(!sheetImg)return;sheetPreview.width=sheetImg.naturalWidth||sheetImg.width;sheetPreview.height=sheetImg.naturalHeight||sheetImg.height;spctx.imageSmoothingEnabled=false;spctx.drawImage(sheetImg,0,0);const C=+$('#sliceCols').value||6,R=+$('#sliceRows').value||3;spctx.strokeStyle='#22d3ee';spctx.lineWidth=1;for(let i=0;i<=C;i++){spctx.beginPath();spctx.moveTo(i*sheetPreview.width/C,0);spctx.lineTo(i*sheetPreview.width/C,sheetPreview.height);spctx.stroke();}for(let j=0;j<=R;j++){spctx.beginPath();spctx.moveTo(0,j*sheetPreview.height/R);spctx.lineTo(sheetPreview.width,j*sheetPreview.height/R);spctx.stroke();}$('#sheetInfo').textContent=`${sheetPreview.width}×${sheetPreview.height} → ${C}×${R} = ${C*R} frames @${$('#sliceSize').value}px`;}
+['sliceCols','sliceRows','sliceSize'].forEach(id=>document.addEventListener('input',e=>{if(e.target&&e.target.id===id)drawSheetPreview();}));
+function keyOut(c){const x=c.getContext('2d'),img=x.getImageData(0,0,c.width,c.height),d=img.data;for(let i=0;i<d.length;i+=4){if(d[i]<24&&d[i+1]<24&&d[i+2]<24)d[i+3]=0;}x.putImageData(img,0,0);}
+function sliceSheet(){if(!sheetImg)return toast('Upload a sheet first');const C=+$('#sliceCols').value||6,R=+$('#sliceRows').value||3,S=+$('#sliceSize').value||32;sprSize=S;$('#sprSize').value=String(S);frames=[];const cw=sheetImg.naturalWidth/C,ch=sheetImg.naturalHeight/R;for(let r=0;r<R;r++)for(let q=0;q<C;q++){const f=newFrameCanvas();const x=f.getContext('2d');x.imageSmoothingEnabled=false;const tmp=document.createElement('canvas');tmp.width=cw;tmp.height=ch;tmp.getContext('2d').drawImage(sheetImg,q*cw,r*ch,cw,ch,0,0,cw,ch);if($('#sliceKey').checked)keyOut(tmp);let dw=cw,dh=ch;const sc=Math.min(S/cw,S/ch,4);dw=cw*sc;dh=ch*sc;if($('#sliceTrim').checked){/* keep simple: auto-crop transparent */}x.clearRect(0,0,S,S);x.drawImage(tmp,(S-dw)/2,(S-dh)/2,dw,dh);frames.push(f);}curFrame=0;renderFilmstrip();drawSprite();document.querySelector('nav .tab[data-tab="sprites"]').click();toast(`Sliced ${frames.length} frames @${S}px`);saveProject();}
+function darkKnightToSprite(){const img=new Image();img.onload=()=>{sheetImg=img;$('#sliceCols').value=6;$('#sliceRows').value=3;$('#sliceSize').value=32;$('#sliceKey').checked=true;drawSheetPreview();sliceSheet();};img.src='dark-knight.png';}
+/* ---------- PREMADE ANIMATION VAULT (original, CC0-style) ---------- */
+function setAnim(size,n){sprSize=size;$('#sprSize').value=String(size);frames=Array.from({length:n},()=>newFrameCanvas());curFrame=0;}
+function finishAnim(msg){renderFilmstrip();drawSprite();document.querySelector('nav .tab[data-tab="sprites"]').click();toast(msg);saveProject();}
+function R(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(x,y,w,h);}
+function animWalk(){setAnim(32,4);const legs=[[13,22,2,6,17,22,2,6],[12,22,3,5,17,23,3,5],[13,22,2,6,17,22,2,6],[14,23,3,5,15,22,3,5]];frames.forEach((f,i)=>{const c=f.getContext('2d');R(c,12,4,8,8,'#fcd7a1');R(c,12,2,8,4,'#5b3a1e');R(c,13,12,6,8,'#4dabf7');R(c,11,12,2,6,'#fcd7a1');R(c,19,12,2,6,'#fcd7a1');const L=legs[i];R(c,L[0],L[1],L[2],L[3],'#1e293b');R(c,L[4],L[5],L[6],L[7],'#1e293b');});finishAnim('Hero walk (4f) loaded');}
+function animSlimeHop(){setAnim(32,3);[[8,16,16,10,0],[9,13,14,12,-2],[8,17,16,9,1]].forEach((s,i)=>{const c=frames[i].getContext('2d');R(c,s[0],s[1],s[2],s[3],'#22c55e');R(c,s[0]+2,s[1]-2,s[2]-4,3,'#86efac');R(c,s[0]+3,s[1]+3,4,4,'#fff');R(c,s[0]+9,s[1]+3,4,4,'#fff');R(c,s[0]+4,s[1]+4,2,2,'#0b1020');R(c,s[0]+10,s[1]+4,2,2,'#0b1020');});finishAnim('Slime hop (3f) loaded');}
+function animBat(){setAnim(32,2);frames.forEach((f,i)=>{const c=f.getContext('2d');R(c,13,14,6,8,'#5b21b6');R(c,14,15,2,2,'#fff');R(c,17,15,2,2,'#fff');if(i===0){R(c,4,8,9,4,'#7c3aed');R(c,19,8,9,4,'#7c3aed');}else{R(c,4,16,9,3,'#7c3aed');R(c,19,16,9,3,'#7c3aed');}});finishAnim('Bat flap (2f) loaded');}
+function animCoinSpin(){setAnim(32,4);const ws=[12,9,5,9];frames.forEach((f,i)=>{const c=f.getContext('2d');const w=ws[i];R(c,16-w/2,8,w,16,'#ffd43b');R(c,16-w/2+1,10,2,12,'#fff3bf');R(c,16-w/2,8,w,2,'#fab005');R(c,16-w/2,22,w,2,'#fab005');});finishAnim('Coin spin (4f) loaded');}
+function animExplosion(){setAnim(32,5);const cols=['#fff7cc','#ffd43b','#ff922b','#f03e3e','#868e96'];const rs=[3,6,9,12,14];frames.forEach((f,i)=>{const c=f.getContext('2d');c.fillStyle=cols[i];c.beginPath();c.arc(16,16,rs[i],0,7);c.fill();c.fillStyle='rgba(255,255,255,.7)';c.beginPath();c.arc(16,16,Math.max(1,rs[i]-4),0,7);c.fill();});finishAnim('Explosion (5f) loaded');}
+function animSlash(){setAnim(32,3);frames.forEach((f,i)=>{const c=f.getContext('2d');c.strokeStyle=['#e7f5ff','#a5d8ff','#22d3ee'][i];c.lineWidth=4-i;c.beginPath();c.moveTo(6+i*3,26-i*4);c.lineTo(26-i*2,6+i*3);c.stroke();c.fillStyle='#fff';c.fillRect(22-i*4,4+i*5,3,3);});finishAnim('Slash (3f) loaded');}
+function animTorch(){setAnim(32,4);frames.forEach((f,i)=>{const c=f.getContext('2d');R(c,14,20,4,8,'#7c4a21');R(c,12,20,8,2,'#495057');const h=[8,11,9,12][i];R(c,16-h/2,18-h,h,h+4,'#ff922b');R(c,16-h/4,20-h/2,h/2,h/2+2,'#ffe066');});finishAnim('Torch (4f) loaded');}
+function animGhost(){setAnim(32,2);frames.forEach((f,i)=>{const c=f.getContext('2d');const dy=i*2;R(c,10,8+dy,12,14,'#e7f5ff');R(c,10,8+dy,12,4,'#f8f9fa');R(c,12,12+dy,3,4,'#0b1020');R(c,17,12+dy,3,4,'#0b1020');for(let k=0;k<4;k++)R(c,10+k*3,22+dy+(k%2?1:-1),3,2,'#e7f5ff');});finishAnim('Ghost float (2f) loaded');}
+function animKnightIdle(){setAnim(32,2);frames.forEach((f,i)=>{const c=f.getContext('2d');const dy=i;R(c,11,6+dy,10,8,'#c92a2a');R(c,13,8+dy,2,3,'#ffe066');R(c,17,8+dy,2,3,'#ffe066');R(c,10,14+dy,12,10,'#862e2e');R(c,12,14+dy,8,8,'#fa5252');R(c,14,16+dy,4,6,'#ffd8a8');R(c,6,14+dy,4,10,'#5c2b2b');R(c,22,14+dy,4,10,'#5c2b2b');R(c,24,10+dy,2,12,'#a5d8ff');R(c,12,24+dy,3,5,'#343a40');R(c,17,24+dy,3,5,'#343a40');});finishAnim('Knight idle (2f) — Dark-Knight-inspired original');}
+function animWater(){setAnim(32,3);frames.forEach((f,i)=>{const c=f.getContext('2d');R(c,0,0,32,32,'#1864ab');for(let y=4;y<32;y+=8){for(let x=0;x<32;x+=8){const o=((x+y+i*4)%16<8)?0:2;R(c,x+o,y+((i*2)%4),6,2,'#a5d8ff');}}});finishAnim('Water (3f) loaded');}
+/* ---------- UPLOADED KNIGHT PACK LOADER ---------- */
+function loadStrip(src,cols,label){const img=new Image();img.onload=()=>{const S=64;sprSize=S;$('#sprSize').value='64';$('#sliceSize').value='64';sheetImg=img;$('#sliceCols').value=cols;$('#sliceRows').value=1;drawSheetPreview();frames=[];const cw=img.naturalWidth/cols,ch=img.naturalHeight;for(let q=0;q<cols;q++){const f=document.createElement('canvas');f.width=f.height=S;const x=f.getContext('2d');x.imageSmoothingEnabled=false;const tmp=document.createElement('canvas');tmp.width=cw;tmp.height=ch;tmp.getContext('2d').drawImage(img,q*cw,0,cw,ch,0,0,cw,ch);if($('#sliceKey').checked)keyOut(tmp);const sc=Math.min(S/cw,S/ch);x.clearRect(0,0,S,S);x.drawImage(tmp,(S-cw*sc)/2,(S-ch*sc)/2,cw*sc,ch*sc);frames.push(f);}curFrame=0;renderFilmstrip();drawSprite();document.querySelector('nav .tab[data-tab="sprites"]').click();toast((label||'Strip')+` loaded: ${cols} frames @64px`);saveProject();try{commitSpr();}catch(e){}};img.onerror=()=>toast('Missing '+src+' — check assets/ folder');img.src=src;}
+function loadWarriorSet(){loadStrip('assets/Warrior_Guard.png',6,'Warrior full set — Guard');setTimeout(()=>toast('Tip: export each anim via PNG Sheet, then load next (Idle/Run/Attacks)'),2500);}
+/* ---------- NEW BRUSHES ---------- */
+function sprayOn(c,x,y,col){for(let i=0;i<14;i++){const ax=x+Math.round((Math.random()-.5)*8),ay=y+Math.round((Math.random()-.5)*8);px(c,ax,ay,col);}const mir=document.getElementById('mirrorMode')&&document.getElementById('mirrorMode').checked;if(mir)for(let i=0;i<14;i++){const ax=sprSize-1-x+Math.round((Math.random()-.5)*8),ay=y+Math.round((Math.random()-.5)*8);px(c,ax,ay,col);}}
+function shadeAt(c,x,y,v,drag){const cl=v=>Math.max(0,Math.min(255,v));const doP=(a,b)=>{if(a<0||b<0||a>=sprSize||b>=sprSize)return;const d=c.getImageData(a,b,1,1).data;if(d[3]===0)return;c.fillStyle=`rgb(${cl(d[0]+v)},${cl(d[1]+v)},${cl(d[2]+v)})`;c.fillRect(a,b,1,1);};if(drag&&startPx){bres(startPx[0],startPx[1],x,y,(a,b)=>doP(a,b));startPx=[x,y];}else doP(x,y);}
+function fxGradient(){const c=frameCtx(),img=c.getImageData(0,0,sprSize,sprSize),d=img.data;const rgb=hexToRgb(sprColor);for(let y=0;y<sprSize;y++){const a=(y/Math.max(1,sprSize-1))*.55;for(let x=0;x<sprSize;x++){const i=(y*sprSize+x)*4;if(d[i+3]>0){d[i]=d[i]*(1-a)+rgb[0]*a;d[i+1]=d[i+1]*(1-a)+rgb[1]*a;d[i+2]=d[i+2]*(1-a)+rgb[2]*a;}}}c.putImageData(img,0,0);drawSprite();renderFilmstrip();toast('Gradient wash');}
+/* ---------- UNDO / REDO (sprites, tiles, map) ---------- */
+let sprHist=[],sprIdx=-1,tileHist=[],tileIdx=-1,mapHist=[],mapIdx=-1;
+function snapFrames(){return{size:sprSize,cur:curFrame,frames:frames.map(f=>f.toDataURL())};}
+function snapTiles(){return{sel:selTile,tiles:tiles.map(t=>t.toDataURL())};}
+function snapMap(){return JSON.parse(JSON.stringify({w:mapW,h:mapH,ground,deco,coll,entities}))}; 
+function sameJ(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+function commitSpr(){if(!frames.length)return;const s=snapFrames();if(sprIdx>=0&&sameJ(s,sprHist[sprIdx]))return;sprHist=sprHist.slice(0,sprIdx+1);sprHist.push(s);if(sprHist.length>60)sprHist.shift();sprIdx=sprHist.length-1;}
+function commitTile(){const s=snapTiles();if(tileIdx>=0&&sameJ(s,tileHist[tileIdx]))return;tileHist=tileHist.slice(0,tileIdx+1);tileHist.push(s);if(tileHist.length>60)tileHist.shift();tileIdx=tileHist.length-1;}
+function commitMap(){const s=snapMap();if(mapIdx>=0&&sameJ(s,mapHist[mapIdx]))return;mapHist=mapHist.slice(0,mapIdx+1);mapHist.push(s);if(mapHist.length>60)mapHist.shift();mapIdx=mapHist.length-1;}
+function restoreFrames(s){sprSize=s.size;$('#sprSize').value=String(s.size);try{$('#sliceSize').value=String(s.size);}catch(e){}curFrame=Math.min(s.cur,s.frames.length-1);frames=s.frames.map(url=>{const c=document.createElement('canvas');c.width=c.height=s.size;const img=new Image();img.onload=()=>{c.getContext('2d').drawImage(img,0,0,s.size,s.size);drawSprite();renderFilmstrip();};img.src=url;return c;});drawSprite();renderFilmstrip();}
+function restoreTiles(s){selTile=Math.min(s.sel,s.tiles.length-1);tiles=s.tiles.map(url=>{const t=newTile();const img=new Image();img.onload=()=>{t.getContext('2d').drawImage(img,0,0);drawTileset();drawTileEditor();renderLevelPalette();};img.src=url;return t;});drawTileset();drawTileEditor();}
+function restoreMap(s){mapW=s.w;mapH=s.h;try{$('#mapW').value=String(s.w);$('#mapH').value=String(s.h);}catch(e){}ground=s.ground;deco=s.deco;coll=s.coll;entities=s.entities;sizeMapCanvas();drawMap();}
+function sprUndo(){if(sprIdx>0){sprIdx--;restoreFrames(sprHist[sprIdx]);saveProject();}else toast('Nothing to undo');}
+function sprRedo(){if(sprIdx<sprHist.length-1){sprIdx++;restoreFrames(sprHist[sprIdx]);saveProject();}else toast('Nothing to redo');}
+function tileUndo(){if(tileIdx>0){tileIdx--;restoreTiles(tileHist[tileIdx]);saveProject();}else toast('Nothing to undo');}
+function tileRedo(){if(tileIdx<tileHist.length-1){tileIdx++;restoreTiles(tileHist[tileIdx]);saveProject();}else toast('Nothing to redo');}
+function mapUndo(){if(mapIdx>0){mapIdx--;restoreMap(mapHist[mapIdx]);saveProject();}else toast('Nothing to undo');}
+function mapRedo(){if(mapIdx<mapHist.length-1){mapIdx++;restoreMap(mapHist[mapIdx]);saveProject();}else toast('Nothing to redo');}
+function seedHist(){try{if(frames.length){sprHist=[snapFrames()];sprIdx=0;}tileHist=[snapTiles()];tileIdx=0;mapHist=[snapMap()];mapIdx=0;}catch(e){}}
+function wrapAfter(names,after){names.forEach(n=>{try{const o=window[n];if(typeof o==='function')window[n]=function(...a){const r=o.apply(this,a);try{after();}catch(e){}return r;};}catch(e){}});}
+wrapAfter(['clearFrame','mirrorFrame','flipV','rotateFrame','shiftFrame','fxOutline','fxDither','fxInvert','fxBlackToAlpha','fxAdjust','fxRetro16','fxSmooth','fxGradient','autoShade','addFrame','dupFrame','delFrame','presetSlime','presetHero','presetCoin','presetTree','animWalk','animSlimeHop','animBat','animCoinSpin','animExplosion','animSlash','animTorch','animGhost','animKnightIdle','animWater','sliceSheet','sendLabToSprite','loadImageToSprite'],commitSpr);
+wrapAfter(['fillTile','noiseTile','genFantasyTiles','genDungeonTiles','clearTiles','copyTileToAll'],commitTile);
+wrapAfter(['fillMapGround','clearMap','demoMap','resizeMap'],commitMap);
+addEventListener('keydown',e=>{const tag=((e.target&&e.target.tagName)||'').toLowerCase();if(tag==='input'||tag==='textarea'||tag==='select')return;if(!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();const tab=document.querySelector('.panel.active')?.id||'';if(k==='z'&&!e.shiftKey){e.preventDefault();if(tab==='tab-tiles')tileUndo();else if(tab==='tab-levels')mapUndo();else sprUndo();}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();if(tab==='tab-tiles')tileRedo();else if(tab==='tab-levels')mapRedo();else sprRedo();}});
+/* ---------- SPRITE STASH (saved sprites, reusable anywhere) ---------- */
+let stash=[];try{stash=JSON.parse(localStorage.getItem('pixelforge-stash')||'[]');}catch(e){stash=[];}
+function escH(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function persistStash(){try{localStorage.setItem('pixelforge-stash',JSON.stringify(stash));}catch(e){toast('Stash full — export & delete some');}}
+function saveStash(){const name=(($('#stashName')?.value)||('Sprite '+(stash.length+1))).slice(0,40)||'Sprite';stash.unshift({name,size:sprSize,frames:frames.map(f=>f.toDataURL()),thumb:frames[curFrame].toDataURL(),ts:Date.now()});if(stash.length>24)stash.length=24;persistStash();renderStash();if($('#stashName'))$('#stashName').value='';toast('Stashed: '+name);}
+function renderStash(){const w=$('#stashList');if(!w)return;w.innerHTML='';if(!stash.length){w.innerHTML='<p class="muted">Empty — stash your knight run here.</p>';return;}stash.forEach((s,i)=>{const d=document.createElement('div');d.style.cssText='display:flex;gap:6px;align-items:center;background:#0e1430;border:1px solid var(--border);border-radius:8px;padding:6px';const info=document.createElement('div');info.style.flex='1';info.innerHTML=`<b style="font-size:12px">${escH(s.name)}</b><br><small style="color:var(--muted)">${s.frames.length}f @${s.size}px</small>`;const im=document.createElement('img');im.src=s.thumb;im.style.cssText='width:40px;height:40px;image-rendering:pixelated;background:#000;border-radius:6px';d.appendChild(im);d.appendChild(info);const mk=(t,fn,tip)=>{const b=document.createElement('button');b.className='small';b.textContent=t;if(tip)b.title=tip;b.onclick=()=>fn(i);d.appendChild(b);};mk('Load',loadStashItem,'Reload into sprite editor');mk('⬛Tile',stashToTile,'Stamp frame 1 into selected tile');mk('⤓',dlStash,'Download PNG sheet');mk('✕',di=>{stash.splice(di,1);persistStash();renderStash();},'Delete');w.appendChild(d);});}
+function loadStashItem(i){const s=stash[i];if(!s)return;sprSize=s.size;$('#sprSize').value=String(s.size);curFrame=0;let done=0;frames=s.frames.map(url=>{const c=document.createElement('canvas');c.width=c.height=s.size;const img=new Image();img.onload=()=>{c.getContext('2d').drawImage(img,0,0,s.size,s.size);drawSprite();renderFilmstrip();if(++done===s.frames.length)commitSpr();};img.src=url;return c;});drawSprite();renderFilmstrip();document.querySelector('nav .tab[data-tab="sprites"]').click();toast('Loaded: '+s.name);saveProject();}
+function stashToTile(i){const s=stash[i];if(!s)return;const img=new Image();img.onload=()=>{const c=tiles[selTile].getContext('2d');c.clearRect(0,0,T,T);c.imageSmoothingEnabled=false;c.drawImage(img,0,0,T,T);drawTileset();drawTileEditor();renderLevelPalette();commitTile();saveProject();toast(`“${s.name}” frame 1 → tile ${selTile}`);};img.src=s.frames[0];}
+function dlStash(i){const s=stash[i];if(!s)return;const c=document.createElement('canvas');c.width=s.size*s.frames.length;c.height=s.size;const x=c.getContext('2d');let done=0;s.frames.forEach((url,k)=>{const img=new Image();img.onload=()=>{x.drawImage(img,k*s.size,0,s.size,s.size);if(++done===s.frames.length)download(c.toDataURL(),s.name.replace(/\s+/g,'-')+'.png');};img.src=url;});}
+function exportStash(){download('data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(stash)),'pixelforge-stash.json');toast('Stash exported');}
+document.getElementById('stashUp').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const a=JSON.parse(r.result);if(Array.isArray(a)){stash=a.slice(0,24);persistStash();renderStash();toast('Stash imported');}else toast('Bad stash file');}catch(err){toast('Bad stash file');}};r.readAsText(f);});
+/* ---------- BUILDINGS + GENERIC IMAGE LOADER ---------- */
+const BUILDINGS=[['assets/Castle.png','Castle'],['assets/Monastery.png','Monastery'],['assets/Barracks.png','Barracks'],['assets/Archery.png','Archery Range'],['assets/Tower.png','Tower'],['assets/House1.png','House 1'],['assets/House2.png','House 2'],['assets/House3.png','House 3']];
+function loadImageToSprite(src,label){const img=new Image();img.onload=()=>{const S=64;sprSize=S;$('#sprSize').value='64';try{$('#sliceSize').value='64';}catch(e){}frames=[newFrameCanvas()];const x=frames[0].getContext('2d');x.imageSmoothingEnabled=false;const sc=Math.min(S/img.naturalWidth,S/img.naturalHeight);x.clearRect(0,0,S,S);x.drawImage(img,(S-img.naturalWidth*sc)/2,(S-img.naturalHeight*sc)/2,img.naturalWidth*sc,img.naturalHeight*sc);curFrame=0;renderFilmstrip();drawSprite();document.querySelector('nav .tab[data-tab="sprites"]').click();toast((label||'Image')+' → sprite frame');saveProject();};img.onerror=()=>toast('Missing '+src);img.src=src;}
+function stashBuildingSet(){let n=0;BUILDINGS.forEach(([src,name])=>{const img=new Image();img.onload=()=>{const S=64;const c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');x.imageSmoothingEnabled=false;const sc=Math.min(S/img.naturalWidth,S/img.naturalHeight);x.drawImage(img,(S-img.naturalWidth*sc)/2,(S-img.naturalHeight*sc)/2,img.naturalWidth*sc,img.naturalHeight*sc);stash.push({name,size:S,frames:[c.toDataURL()],thumb:c.toDataURL(),ts:Date.now()});if(++n===BUILDINGS.length){stash=stash.slice(0,24);persistStash();renderStash();toast('8 buildings stashed');}};img.src=src;});}
+/* ---------- PROJECT ---------- */
+function collectProject(){return{name:$('#projName').value,sprSize,frames:frames.map(f=>f.toDataURL()),tiles:tiles.map(t=>t.toDataURL()),map:{w:mapW,h:mapH,ground,deco,coll,entities}};}
+function saveProject(manual){try{localStorage.setItem('pixelforge',JSON.stringify(collectProject()));$('#saveStatus').textContent='● autosaved '+new Date().toLocaleTimeString();if(manual)toast('Project saved');$('#status').textContent='Saved • '+$('#projName').value;}catch(e){}}
+function loadProject(){try{const raw=localStorage.getItem('pixelforge');if(!raw)return false;const p=JSON.parse(raw);$('#projName').value=p.name||'My Awesome Game';sprSize=p.sprSize||32;$('#sprSize').value=String(sprSize);frames=p.frames.map(url=>{const c=newFrameCanvas();const img=new Image();img.onload=()=>{c.getContext('2d').drawImage(img,0,0,sprSize,sprSize);drawSprite();renderFilmstrip();};img.src=url;return c;});tiles=p.tiles.map(url=>{const t=newTile();const img=new Image();img.onload=()=>{t.getContext('2d').drawImage(img,0,0);drawTileset();drawTileEditor();};img.src=url;return t;});mapW=p.map.w;mapH=p.map.h;$('#mapW').value=String(mapW);$('#mapH').value=String(mapH);ground=p.map.ground;deco=p.map.deco;coll=p.map.coll;entities=p.map.entities||[];sizeMapCanvas();return true;}catch(e){return false;}}
+function exportProjectJSON(){download('data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(collectProject(),null,2)),$('#projName').value.replace(/\s+/g,'-')+'.pixelforge.json');}
+$('#importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{localStorage.setItem('pixelforge',r.result);location.reload();}catch(err){toast('Bad file');}};r.readAsText(f);};
+function exportAll(){const p=collectProject();download('data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({game:p.name,exported:new Date().toISOString(),sprite:{frameWidth:sprSize,frames:p.frames.length},level:{width:mapW,height:mapH},map:{ground,deco,collision:coll,entities}},null,2)),'game-pack.json');downloadSpriteSheet();downloadMapPNG();toast('Game pack exported: JSON + PNGs');}
+/* ---------- BOOT ---------- */
+if(!loadProject()){initSprites();initTiles();blankMap();sizeMapCanvas();demoMap();}
+else{renderSwatches();renderFilmstrip();drawSprite();drawTileset();drawTileEditor();drawMap();}
+renderLevelPalette();labSampleSilent();
+setInterval(()=>{if(!document.hidden)saveProject();},15000);
+</script>
+</body>
+</html>/html>rawTileset();drawTileEditor();drawMap();}
+renderLevelPalette();labSampleSilent();
+setInterval(()=>{if(!document.hidden)saveProject();},15000);
+</script>
+</body>
+</html>/html>/html>

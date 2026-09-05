@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Village Quest — prebuilt with your assets</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#e6ebff;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:14px}
+h1{margin:6px 0 2px;font-size:22px}h1 span{color:#22d3ee}p.sub{color:#8b96b8;margin:0 0 10px;font-size:13px}
+#wrap{position:relative;width:min(960px,100%)}
+canvas{width:100%;border-radius:14px;border:1px solid #2a3560;image-rendering:pixelated;background:#000;display:block}
+#hud{position:absolute;top:10px;left:10px;background:rgba(10,15,36,.82);border:1px solid #2a3560;border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.7}
+#hud b{color:#ffe066}#toast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(10,15,36,.9);border:1px solid #22d3ee;border-radius:10px;padding:8px 16px;font-size:14px;display:none}
+#touch{display:none;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+#touch button{font-size:20px;padding:12px 18px;background:#1a2340;border:1px solid #2a3560;color:#fff;border-radius:12px}
+@media(pointer:coarse){#touch{display:flex}}
+.bar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+.bar button{background:#212c55;border:1px solid #2a3560;color:#e6ebff;border-radius:8px;padding:7px 14px;cursor:pointer}
+a{color:#22d3ee}
+</style>
+</head>
+<body>
+<h1>🏰 Village Quest <span>— your assets, playable</span></h1>
+<p class="sub">Warrior + pawns + all 8 buildings, straight from PixelForge. <a href="index.html">← back to studio</a></p>
+<div id="wrap">
+<canvas id="game" width="960" height="600"></canvas>
+<div id="hud">🪙 <b id="coins">0 / 10</b> gold &nbsp;•&nbsp; ⛪ Monastery: <b id="mon">✗</b><br><span style="color:#8b96b8">WASD/arrows move • <b>Space</b> attack • <b>Shift</b> guard • <b>E</b> talk • smash barrels!</span></div>
+<div id="toast"></div>
+</div>
+<div id="touch">
+<button data-k="up">▲</button><button data-k="left">◀</button><button data-k="down">▼</button><button data-k="right">▶</button><button data-k="atk">⚔️</button><button data-k="talk">💬</button>
+</div>
+<div class="bar"><button onclick="resetGame()">↻ Restart (R)</button><button onclick="toggleMute()">🔊 Sound on/off</button></div>
+<script>
+const cv=document.getElementById('game'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+const toastEl=document.getElementById('toast');let toastT=null;
+function toast(m,ms=2200){toastEl.textContent=m;toastEl.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>toastEl.style.display='none',ms);}
+// ---- audio (tiny synth) ----
+let AC=null,muted=false;function beep(f,d=0.08,type='square',v=0.05){if(muted)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+d);o.stop(AC.currentTime+d);}catch(e){}}
+function toggleMute(){muted=!muted;toast(muted?'🔇 muted':'🔊 sound on');}
+// ---- asset loading (keys out near-black bg either way) ----
+function loadKeyed(src){return new Promise(res=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext('2d');x.drawImage(img,0,0);try{const id=x.getImageData(0,0,c.width,c.height),d=id.data;for(let i=0;i<d.length;i+=4){if(d[i]<20&&d[i+1]<20&&d[i+2]<20)d[i+3]=0;}x.putImageData(id,0,0);}catch(e){}res(c);};img.onerror=()=>res(null);img.src=src;});}
+const STRIPS={idle:['assets/Warrior_Idle.png',8],run:['assets/Warrior_Run.png',6],atk:['assets/Warrior_Attack2.png',4],guard:['assets/Warrior_Guard.png',6],axe:['assets/Pawn_Idle Axe.png',8],hammer:['assets/Pawn_Idle Hammer.png',8],gold:['assets/Pawn_Idle Gold.png',8]};
+const BDEF=[['assets/Castle.png',320,10],['assets/Monastery.png',40,110],['assets/Barracks.png',728,100],['assets/Archery.png',52,352],['assets/Tower.png',792,340],['assets/House1.png',248,400],['assets/House2.png',428,428],['assets/House3.png',600,400]];
+let S={},B=[];
+async function loadAll(){for(const k in STRIPS){S[k]=await loadKeyed(STRIPS[k][0]);}for(const [src,x,y] of BDEF){const c=await loadKeyed(src);B.push({c,x,y,w:c?c.width:120,h:c?c.height:120});}}
+// ---- world state ----
+let player,pawns,coins,barrels,parts,visited,started,winT,dlg;
+function resetGame(){player={x:480,y:520,face:1,state:'idle',ft:0,atkT:0,cd:0};pawns=[{strip:'axe',x:300,y:300,hx:300,hy:300,ft:0,face:1,wt:0,mx:0,my:0,line:'Need those barrels smashed, warrior!'},{strip:'hammer',x:660,y:300,hx:660,hy:300,ft:2,face:-1,wt:3,mx:0,my:0,line:'The Monastery glows at dusk. Go see it!'},{strip:'gold',x:480,y:220,hx:480,hy:220,ft:4,face:1,wt:1,mx:0,my:0,line:'Ten gold and the village eats tonight!'}];coins=[[150,200],[350,140],[620,160],[830,240],[200,470],[520,350],[760,500],[880,120]].map(([x,y],i)=>({x,y,i,taken:false}));barrels=[{x:240,y:330,hp:2},{x:700,y:430,hp:2},{x:430,y:160,hp:2}];parts=[];visited=false;started=performance.now();winT=null;dlg=null;updateHUD();toast('Collect 10 gold, visit the Monastery ⛪');}
+function solids(){return B.map(b=>({x:b.x+b.w*0.15,y:b.y+b.h*0.45,w:b.w*0.7,h:b.h*0.55}));}
+function collide(e,r=14){for(const s of solids()){const nx=Math.max(s.x,Math.min(e.x,s.x+s.w)),ny=Math.max(s.y,Math.min(e.y,s.y+s.h));const dx=e.x-nx,dy=e.y-ny;if(dx*dx+dy*dy<r*r){if(Math.abs(dx)>Math.abs(dy))e.x=s.x+(dx>0?s.w+r:-r);else e.y=s.y+(dy>0?s.h+r:-r);}}e.x=Math.max(20,Math.min(940,e.x));e.y=Math.max(60,Math.min(580,e.y));}
+// ---- input ----
+const keys={};addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k===' '?' ':k)||k.startsWith('arrow'))e.preventDefault();keys[k]=true;if(k===' '&&player&&player.atkT<=0&&player.cd<=0){player.state='atk';player.atkT=0;player.cd=0.55;beep(220,0.12,'sawtooth',0.04);}if(k==='e')talk();if(k==='r')resetGame();});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.k;const dn=e=>{e.preventDefault();if(k==='atk'){keys[' ']=true;if(player&&player.atkT<=0&&player.cd<=0){player.state='atk';player.atkT=0;player.cd=0.55;beep(220,0.12,'sawtooth',0.04);}}else if(k==='talk')talk();else keys[k]=true;};const up=e=>{e.preventDefault();keys[k==='atk'?' ':k]=false;};b.addEventListener('pointerdown',dn);b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);});
+function talk(){if(!player)return;let best=null,bd=80;pawns.forEach(p=>{const d=Math.hypot(p.x-player.x,p.y-player.y);if(d<bd){bd=d;best=p;}});if(best){dlg={t:best.line,until:performance.now()+3000};beep(660,0.08);}}
+// ---- background ----
+let bg=null;function makeBg(){bg=document.createElement('canvas');bg.width=960;bg.height=600;const x=bg.getContext('2d');x.fillStyle='#3d7a37';x.fillRect(0,0,960,600);for(let i=0;i<900;i++){x.fillStyle=['#35702f','#458a3e','#2f6629'][i%3];x.fillRect(Math.random()*960,Math.random()*600,3,3);}x.fillStyle='#8a6f4d';[[0,300,960,54],[480,0,54,600]].forEach(([a,b,w,h])=>{x.fillRect(a,b,w,h);});x.fillStyle='#7a5f42';for(let i=0;i<200;i++){x.fillRect(Math.random()*960,Math.random()<.5?300+Math.random()*54:Math.random()*600,3,2);}x.fillStyle='rgba(0,0,0,.15)';x.fillRect(0,0,960,14);}
+// ---- update ----
+function update(dt){if(winT)return;const sp=185;let mx=0,my=0;if(keys['a']||keys['arrowleft']||keys['left'])mx-=1;if(keys['d']||keys['arrowright']||keys['right'])mx+=1;if(keys['w']||keys['arrowup']||keys['up'])my-=1;if(keys['s']||keys['arrowdown']||keys['down'])my+=1;
+const guard=!!(keys['shift']);player.cd=Math.max(0,player.cd-dt);
+if(player.state==='atk'){player.atkT+=dt;const n=STRIPS.atk[1];if(player.atkT> n/12){player.state='idle';}else if(player.atkT>0.08&&!player.didHit){player.didHit=true;slashHit();}if(player.atkT<=0)player.didHit=false;}
+else if(guard){player.state='guard';}
+else if(mx||my){const l=Math.hypot(mx,my);player.x+=mx/l*sp*dt;player.y+=my/l*sp*dt;if(mx)player.face=mx>0?1:-1;player.state='run';}
+else player.state='idle';
+if(player.state!=='atk')player.didHit=false;
+collide(player);player.ft+=dt;
+pawns.forEach(p=>{p.wt-=dt;p.ft+=dt;if(p.wt<=0){p.wt=2+Math.random()*3;const a=Math.random()*Math.PI*2;p.mx=Math.cos(a)*40;p.my=Math.sin(a)*40;if(Math.abs(p.mx)>4)p.face=p.mx>0?1:-1;}const tx=p.hx+p.mx,ty=p.hy+p.my;p.x+=(tx-p.x)*Math.min(1,dt*0.8);p.y+=(ty-p.y)*Math.min(1,dt*0.8);});
+coins.forEach(c=>{if(!c.taken&&Math.hypot(c.x-player.x,c.y-player.y)<30){c.taken=true;burst(c.x,c.y,'#ffd43b');beep(880+Math.random()*200,0.1);updateHUD();}});
+parts=parts.filter(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.life-=dt;return p.life>0;});
+const mz={x:40,y:110,w:192,h:320};if(!visited&&player.x>mz.x&&player.x<mz.x+mz.w&&player.y>mz.y&&player.y<mz.y+mz.h){visited=true;beep(523,0.15);beep(784,0.2);updateHUD();toast('⛪ Monastery visited! Now finish the gold.');}
+const got=coins.filter(c=>c.taken).length+(10-coins.length-   0)+barrelGold();
+if(got>=10&&visited){winT=(performance.now()-started)/1000;beep(523,0.12);setTimeout(()=>beep(659,0.12),130);setTimeout(()=>beep(784,0.25),260);}}
+let bonusGold=0;function barrelGold(){return bonusGold;}
+function slashHit(){const hx=player.x+player.face*44;burst(hx,player.y-30,'#e7f5ff');beep(180,0.1,'square',0.06);barrels.forEach(b=>{if(b.hp>0&&Math.hypot(b.x-hx,b.y-(player.y-20))<60){b.hp--;burst(b.x,b.y-20,'#a16207');if(b.hp<=0){bonusGold+=1;burst(b.x,b.y-30,'#ffd43b');beep(990,0.12);toast('🛢️ Barrel smashed! +1 gold');updateHUD();}}});}
+function burst(x,y,col){for(let i=0;i<12;i++){parts.push({x,y,vx:(Math.random()-.5)*220,vy:-Math.random()*220,life:.5+Math.random()*.4,col});}}
+function updateHUD(){const got=coins.filter(c=>c.taken).length+bonusGold;document.getElementById('coins').textContent=`${Math.min(got,10)} / 10`;document.getElementById('mon').textContent=visited?'✓':'✗';}
+// ---- draw ----
+function frameCanvas(key,idx){const sheet=S[key];if(!sheet)return null;const n=STRIPS[key][1],fw=sheet.width/n;const c=document.createElement('canvas');c.width=fw;c.height=sheet.height;const x=c.getContext('2d');x.drawImage(sheet,(idx%n)*fw,0,fw,sheet.height,0,0,fw,sheet.height);return c;}
+function drawStrip(key,idx,x,y,size,face){const sheet=S[key];if(!sheet){ctx.fillStyle='#7c5cff';ctx.fillRect(x-size/2,y-size,size,size);return;}const n=STRIPS[key][1],fw=sheet.width/n,fh=sheet.height;ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.scale(face,1);ctx.drawImage(sheet,(idx%n)*fw,0,fw,fh,-size/2,-size,size,size*(fh/fw));ctx.restore();}
+function shadow(x,y,r){ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(x,y,r,r*0.35,0,0,7);ctx.fill();}
+function draw(){ctx.drawImage(bg,0,0);
+const draws=[];B.forEach(b=>draws.push({fy:b.y+b.h,fn:()=>{if(b.c)ctx.drawImage(b.c,b.x,b.y);else{ctx.fillStyle='#8a6f4d';ctx.fillRect(b.x,b.y,b.w,b.h);}}}));
+coins.forEach(c=>{if(!c.taken)draws.push({fy:c.y,fn:()=>{const w=Math.abs(Math.cos(performance.now()/300+c.i))*8+3;shadow(c.x,c.y+8,8);ctx.fillStyle='#fab005';ctx.beginPath();ctx.ellipse(c.x,c.y-14+Math.sin(performance.now()/400+c.i)*3,w+3,12,0,0,7);ctx.fill();ctx.fillStyle='#fff3bf';ctx.beginPath();ctx.ellipse(c.x-2,c.y-14+Math.sin(performance.now()/400+c.i)*3,Math.max(1,w*0.3),7,0,0,7);ctx.fill();}});});
+barrels.forEach(b=>{if(b.hp>0)draws.push({fy:b.y,fn:()=>{shadow(b.x,b.y,14);ctx.fillStyle='#7c4a21';ctx.fillRect(b.x-13,b.y-40,26,40);ctx.fillStyle='#a16207';ctx.fillRect(b.x-13,b.y-40,26,5);ctx.fillRect(b.x-13,b.y-15,26,4);}});});
+pawns.forEach(p=>draws.push({fy:p.y,fn:()=>{shadow(p.x,p.y,16);drawStrip(p.strip,Math.floor(p.ft*5)%8,p.x,p.y-40,80,p.face);}}));
+draws.push({fy:player.y,fn:()=>{shadow(player.x,player.y,17);const P=player;if(P.state==='atk')drawStrip('atk',Math.min(3,Math.floor(P.atkT*12)),P.x,P.y-48,96,P.face);else if(P.state==='guard')drawStrip('guard',0,P.x,P.y-48,96,P.face);else if(P.state==='run')drawStrip('run',Math.floor(P.ft*10)%6,P.x,P.y-48,96,P.face);else drawStrip('idle',Math.floor(P.ft*6)%8,P.x,P.y-48,96,P.face);}});
+parts.forEach(p=>draws.push({fy:9999,fn:()=>{ctx.globalAlpha=Math.min(1,p.life*2);ctx.fillStyle=p.col;ctx.fillRect(p.x,p.y,4,4);ctx.globalAlpha=1;}}));
+draws.sort((a,b)=>a.fy-b.fy).forEach(d=>d.fn());
+// monastery beacon
+const t=performance.now()/500;ctx.strokeStyle=`rgba(255,224,102,${visited?0.25:0.6+Math.sin(t)*0.3})`;ctx.lineWidth=3;ctx.strokeRect(40,110,192,320);
+if(dlg&&performance.now()<dlg.until){const p=nearestPawn();if(p){ctx.fillStyle='rgba(10,15,36,.92)';const w=ctx.measureText(dlg.t).width;ctx.font='13px sans-serif';const bw=Math.min(300,ctx.measureText(dlg.t).width+20);ctx.fillRect(p.x-bw/2,p.y-150,bw,34);ctx.strokeStyle='#22d3ee';ctx.strokeRect(p.x-bw/2,p.y-150,bw,34);ctx.fillStyle='#fff';ctx.fillText(dlg.t,p.x-bw/2+10,p.y-128);}}
+if(winT){ctx.fillStyle='rgba(5,8,20,.78)';ctx.fillRect(0,0,960,600);ctx.fillStyle='#ffe066';ctx.font='bold 44px serif';ctx.textAlign='center';ctx.fillText('🎉 VILLAGE SAVED!',480,260);ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`10 gold • monastery blessed • ${winT.toFixed(1)}s`,480,300);ctx.fillStyle='#8b96b8';ctx.font='16px sans-serif';ctx.fillText('Press R to play again — assets: your Warrior, Pawns & 8 buildings',480,330);ctx.textAlign='left';}}
+function nearestPawn(){let best=null,bd=1e9;pawns.forEach(p=>{const d=Math.hypot(p.x-player.x,p.y-player.y);if(d<bd){bd=d;best=p;}});return best;}
+// ---- main ----
+let last=0;function loop(ts){const dt=Math.min(0.05,(ts-last)/1000||0);last=ts;update(dt);draw();requestAnimationFrame(loop);}
+(async()=>{makeBg();resetGame();await loadAll();updateHUD();requestAnimationFrame(loop);})();
+</script>
+</body>
+</html>
