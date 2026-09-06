@@ -1,0 +1,15 @@
+{
+  "name": "pixelforge-studio",
+  "productName": "PixelForge Studio",
+  "version": "1.0.0",
+  "description": "All-in-one game asset studio — pixel sprites, tilesets, level maps, and a graphics lab for real retro graphics.",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "PixelForge",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.7.7"
+  }
+}
